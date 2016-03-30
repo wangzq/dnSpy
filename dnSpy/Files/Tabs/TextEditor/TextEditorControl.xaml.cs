@@ -130,6 +130,8 @@ namespace dnSpy.Files.Tabs.TextEditor {
 
 			InputBindings.Add(new KeyBinding(new RelayCommand(a => MoveReference(true)), Key.Tab, ModifierKeys.None));
 			InputBindings.Add(new KeyBinding(new RelayCommand(a => MoveReference(false)), Key.Tab, ModifierKeys.Shift));
+			InputBindings.Add(new KeyBinding(new RelayCommand(a => MoveReference(true)), Key.Down, ModifierKeys.Control | ModifierKeys.Shift));
+			InputBindings.Add(new KeyBinding(new RelayCommand(a => MoveReference(false)), Key.Up, ModifierKeys.Control | ModifierKeys.Shift));
 			InputBindings.Add(new KeyBinding(new RelayCommand(a => MoveToNextDefinition(true)), Key.Down, ModifierKeys.Alt));
 			InputBindings.Add(new KeyBinding(new RelayCommand(a => MoveToNextDefinition(false)), Key.Up, ModifierKeys.Alt));
 			InputBindings.Add(new KeyBinding(new RelayCommand(a => FollowReference()), Key.F12, ModifierKeys.None));
@@ -140,6 +142,18 @@ namespace dnSpy.Files.Tabs.TextEditor {
 
 			TextEditor.OnShowLineNumbersChanged();
 			OnAutoHighlightRefsChanged();
+		}
+
+		protected override void OnPreviewKeyDown(KeyEventArgs e) {
+			// Check for this combo here because of the scrollviewer
+			if (e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)) {
+				if (e.Key == Key.Up || e.Key == Key.Down) {
+					MoveReference(e.Key == Key.Down);
+					e.Handled = true;
+					return;
+				}
+			}
+			base.OnPreviewKeyDown(e);
 		}
 
 		public Button CancelButton {
@@ -589,8 +603,15 @@ namespace dnSpy.Files.Tabs.TextEditor {
 
 			var ma = a.Reference as IMemberRef;
 			var mb = b.Reference as IMemberRef;
-			if (ma != null && mb != null)
+			if (ma != null && mb != null) {
+				// PERF: Prevent expensive resolves by doing a quick name check
+				if (ma.Name != mb.Name)
+					return false;
+
+				ma = Resolve(ma) ?? ma;
+				mb = Resolve(mb) ?? mb;
 				return new SigComparer(SigComparerOptions.CompareDeclaringTypes | SigComparerOptions.PrivateScopeIsComparable).Equals(ma, mb);
+			}
 
 			return false;
 		}

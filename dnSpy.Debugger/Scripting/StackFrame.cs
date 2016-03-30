@@ -19,6 +19,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using dndbg.Engine;
 using dnSpy.Contracts.Highlighting;
 using dnSpy.Contracts.Scripting.Debugger;
@@ -97,11 +99,11 @@ namespace dnSpy.Debugger.Scripting {
 		}
 		readonly int frameNo;
 
-		public IDebuggerFunction Function {
+		public IDebuggerMethod Method {
 			get {
 				return debugger.Dispatcher.UI(() => {
 					var func = frame.Function;
-					return func == null ? null : new DebuggerFunction(debugger, func);
+					return func == null ? null : new DebuggerMethod(debugger, func);
 				});
 			}
 		}
@@ -125,7 +127,7 @@ namespace dnSpy.Debugger.Scripting {
 			}
 		}
 
-		public IDebuggerValue[] ILArguments {
+		public IDebuggerValue[] Arguments {
 			get {
 				return debugger.Dispatcher.UI(() => {
 					var list = new List<IDebuggerValue>();
@@ -136,7 +138,7 @@ namespace dnSpy.Debugger.Scripting {
 			}
 		}
 
-		public IDebuggerValue[] ILLocals {
+		public IDebuggerValue[] Locals {
 			get {
 				return debugger.Dispatcher.UI(() => {
 					var list = new List<IDebuggerValue>();
@@ -209,35 +211,35 @@ namespace dnSpy.Debugger.Scripting {
 				this.sfFlags |= SFFlags.RuntimeUnwindableFrame;
 		}
 
-		public IDebuggerValue GetILLocal(uint index) {
+		public IDebuggerValue GetLocal(uint index) {
 			return debugger.Dispatcher.UI(() => {
 				var value = frame.GetILLocal(index);
 				return value == null ? null : new DebuggerValue(debugger, value);
 			});
 		}
 
-		public IDebuggerValue GetILLocal(int index) {
+		public IDebuggerValue GetLocal(int index) {
 			return debugger.Dispatcher.UI(() => {
 				var value = frame.GetILLocal(index);
 				return value == null ? null : new DebuggerValue(debugger, value);
 			});
 		}
 
-		public IDebuggerValue GetILArgument(uint index) {
+		public IDebuggerValue GetArgument(uint index) {
 			return debugger.Dispatcher.UI(() => {
 				var value = frame.GetILArgument(index);
 				return value == null ? null : new DebuggerValue(debugger, value);
 			});
 		}
 
-		public IDebuggerValue GetILArgument(int index) {
+		public IDebuggerValue GetArgument(int index) {
 			return debugger.Dispatcher.UI(() => {
 				var value = frame.GetILArgument(index);
 				return value == null ? null : new DebuggerValue(debugger, value);
 			});
 		}
 
-		public IDebuggerValue[] GetILLocals(ILCodeKind kind) {
+		public IDebuggerValue[] GetLocals(ILCodeKind kind) {
 			return debugger.Dispatcher.UI(() => {
 				var list = new List<IDebuggerValue>();
 				foreach (var v in frame.GetILLocals((dndbg.COM.CorDebug.ILCodeKind)kind))
@@ -246,14 +248,14 @@ namespace dnSpy.Debugger.Scripting {
 			});
 		}
 
-		public IDebuggerValue GetILLocal(ILCodeKind kind, uint index) {
+		public IDebuggerValue GetLocal(ILCodeKind kind, uint index) {
 			return debugger.Dispatcher.UI(() => {
 				var value = frame.GetILLocal((dndbg.COM.CorDebug.ILCodeKind)kind, index);
 				return value == null ? null : new DebuggerValue(debugger, value);
 			});
 		}
 
-		public IDebuggerValue GetILLocal(ILCodeKind kind, int index) {
+		public IDebuggerValue GetLocal(ILCodeKind kind, int index) {
 			return debugger.Dispatcher.UI(() => {
 				var value = frame.GetILLocal((dndbg.COM.CorDebug.ILCodeKind)kind, index);
 				return value == null ? null : new DebuggerValue(debugger, value);
@@ -293,16 +295,64 @@ namespace dnSpy.Debugger.Scripting {
 			debugger.StepInto(this);
 		}
 
+		public Task<bool> StepIntoAsync(int millisecondsTimeout) {
+			return debugger.StepIntoAsync(this, millisecondsTimeout);
+		}
+
+		public bool StepIntoWait(int millisecondsTimeout) {
+			return debugger.StepIntoWait(this, millisecondsTimeout);
+		}
+
+		public bool StepIntoWait(CancellationToken token, int millisecondsTimeout) {
+			return debugger.StepIntoWait(this, token, millisecondsTimeout);
+		}
+
 		public void StepOver() {
 			debugger.StepOver(this);
+		}
+
+		public Task<bool> StepOverAsync(int millisecondsTimeout) {
+			return debugger.StepOverAsync(this, millisecondsTimeout);
+		}
+
+		public bool StepOverWait(int millisecondsTimeout) {
+			return debugger.StepOverWait(this, millisecondsTimeout);
+		}
+
+		public bool StepOverWait(CancellationToken token, int millisecondsTimeout) {
+			return debugger.StepOverWait(this, token, millisecondsTimeout);
 		}
 
 		public void StepOut() {
 			debugger.StepOut(this);
 		}
 
+		public Task<bool> StepOutAsync(int millisecondsTimeout) {
+			return debugger.StepOutAsync(this, millisecondsTimeout);
+		}
+
+		public bool StepOutWait(int millisecondsTimeout) {
+			return debugger.StepOutWait(this, millisecondsTimeout);
+		}
+
+		public bool StepOutWait(CancellationToken token, int millisecondsTimeout) {
+			return debugger.StepOutWait(this, token, millisecondsTimeout);
+		}
+
 		public bool RunTo() {
 			return debugger.RunTo(this);
+		}
+
+		public Task<bool> RunToAsync(int millisecondsTimeout) {
+			return debugger.RunToAsync(this, millisecondsTimeout);
+		}
+
+		public bool RunToWait(int millisecondsTimeout) {
+			return debugger.RunToWait(this, millisecondsTimeout);
+		}
+
+		public bool RunToWait(CancellationToken token, int millisecondsTimeout) {
+			return debugger.RunToWait(this, token, millisecondsTimeout);
 		}
 
 		public bool SetOffset(int offset) {
@@ -319,6 +369,30 @@ namespace dnSpy.Debugger.Scripting {
 
 		public bool SetNativeOffset(uint offset) {
 			return debugger.SetNativeOffset(this, offset);
+		}
+
+		public IDebuggerValue ReadStaticField(IDebuggerField field) {
+			return field.Class.ReadStaticField(this, field);
+		}
+
+		public IDebuggerValue ReadStaticField(IDebuggerClass cls, uint token) {
+			return cls.ReadStaticField(this, token);
+		}
+
+		public IDebuggerValue ReadStaticField(IDebuggerType type, uint token) {
+			return type.ReadStaticField(this, token);
+		}
+
+		public IDebuggerValue ReadStaticField(IDebuggerClass cls, string name, bool checkBaseClasses) {
+			return cls.ReadStaticField(this, name, checkBaseClasses);
+		}
+
+		public IDebuggerValue ReadStaticField(IDebuggerType type, string name, bool checkBaseClasses) {
+			return type.ReadStaticField(this, name, checkBaseClasses);
+		}
+
+		public IDebuggerValue ReadStaticField(IDebuggerType type, IDebuggerField field) {
+			return type.ReadStaticField(this, field);
 		}
 
 		public override bool Equals(object obj) {

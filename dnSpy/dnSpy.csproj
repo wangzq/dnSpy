@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -8,12 +9,12 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>dnSpy</RootNamespace>
     <AssemblyName>dnSpy</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\dnSpy.snk</AssemblyOriginatorKeyFile>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -154,7 +155,6 @@
     <Compile Include="Files\Tabs\Settings\DisplaySettingsTab.cs" />
     <Compile Include="Files\Tabs\TabCommands.cs" />
     <Compile Include="Files\Tabs\TabContentImpl.cs" />
-    <Compile Include="Files\Tabs\TabElementScaler.cs" />
     <Compile Include="Files\Tabs\TabHistory.cs" />
     <Compile Include="Files\Tabs\TextEditor\Commands.cs" />
     <Compile Include="Files\Tabs\TextEditor\DecompileFileTabContent.cs" />
@@ -258,7 +258,6 @@
     </Compile>
     <Compile Include="MainApp\MsgBoxVM.cs" />
     <Compile Include="MainApp\SavedWindowState.cs" />
-    <Compile Include="MainApp\ServiceLocator.cs" />
     <Compile Include="MainApp\StartUpClass.cs" />
     <Compile Include="MainApp\ToolBarCommands.cs" />
     <Compile Include="MainApp\ViewCommands.cs" />
@@ -280,6 +279,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>dnSpy.Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Scripting\ServiceLocator.cs" />
     <Compile Include="Search\AppCommandLineArgsHandler.cs" />
     <Compile Include="Search\Commands.cs" />
     <Compile Include="Search\FileSearcher.cs" />
@@ -312,6 +312,7 @@
     <Compile Include="Settings\XmlSettingsWriter.cs" />
     <Compile Include="Settings\XmlUtils.cs" />
     <Compile Include="Tabs\FileTabBackgroundConverter.cs" />
+    <Compile Include="Tabs\TabElementScaler.cs" />
     <Compile Include="Tabs\TabGroup.cs" />
     <Compile Include="Tabs\TabGroupManager.cs" />
     <Compile Include="Tabs\TabItemImpl.cs" />
@@ -354,6 +355,8 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>dnSpy.Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\dnSpy.Resources.ru.resx" />
+    <EmbeddedResource Include="Properties\dnSpy.Resources.zh-CN.resx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AvalonEdit\ICSharpCode.AvalonEdit\ICSharpCode.AvalonEdit.csproj">
@@ -657,9 +660,9 @@
     <Resource Include="Images\XsltFile.png" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Microsoft.Windows.Shell.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="..\Licenses\CREDITS.txt">
+      <Link>CREDITS.txt</Link>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

@@ -19,11 +19,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
+using dnSpy.Shared.Controls;
 
-namespace dnSpy.Files.Tabs {
+namespace dnSpy.Tabs {
 	sealed class TabElementScaler : IDisposable {
 		readonly List<CommandBinding> commandBindings;
 		readonly List<KeyBinding> keyBindings;
@@ -49,7 +50,8 @@ namespace dnSpy.Files.Tabs {
 			scaleElement = elem;
 			if (scaleElement == null)
 				return;
-			scaleElement.MouseWheel += ScaleElement_MouseWheel;
+			// A scrollviewer will prevent our code from getting called so use AddHandler()
+			scaleElement.AddHandler(UIElement.MouseWheelEvent, new MouseWheelEventHandler(ScaleElement_MouseWheel), true);
 			scaleElement.CommandBindings.AddRange(commandBindings);
 			scaleElement.InputBindings.AddRange(keyBindings);
 			ScaleValue = ScaleValue;
@@ -58,7 +60,8 @@ namespace dnSpy.Files.Tabs {
 		void UninstallScale() {
 			if (scaleElement == null)
 				return;
-			scaleElement.MouseWheel -= ScaleElement_MouseWheel;
+			scaleElement.Loaded -= ScaleElement_Loaded;
+			scaleElement.RemoveHandler(UIElement.MouseWheelEvent, new MouseWheelEventHandler(ScaleElement_MouseWheel));
 			foreach (var b in commandBindings)
 				scaleElement.CommandBindings.Remove(b);
 			foreach (var b in keyBindings)
@@ -86,13 +89,13 @@ namespace dnSpy.Files.Tabs {
 
 		void ZoomIncrease() {
 			var scale = ScaleValue;
-			scale += scale / 10;
+			scale *= 1.1;
 			ScaleValue = scale;
 		}
 
 		void ZoomDecrease() {
 			var scale = ScaleValue;
-			scale -= scale / 10;
+			scale /= 1.1;
 			ScaleValue = scale;
 		}
 
@@ -104,31 +107,59 @@ namespace dnSpy.Files.Tabs {
 			get { return currentScaleValue; }
 			set {
 				var scale = value;
-				if (double.IsNaN(scale))
+				if (double.IsNaN(scale) || Math.Abs(scale - 1.0) < 0.05)
 					scale = 1.0;
-				if (scaleElement == null) {
-				}
-				else if (scale == 1) {
-					scaleElement.LayoutTransform = Transform.Identity;
-					scaleElement.ClearValue(TextOptions.TextFormattingModeProperty);
-				}
-				else {
-					if (scale < MIN_ZOOM)
-						scale = MIN_ZOOM;
-					else if (scale > MAX_ZOOM)
-						scale = MAX_ZOOM;
 
-					// We must set it to Ideal or the text will be blurry
-					TextOptions.SetTextFormattingMode(scaleElement, TextFormattingMode.Ideal);
+				if (scale < MIN_ZOOM)
+					scale = MIN_ZOOM;
+				else if (scale > MAX_ZOOM)
+					scale = MAX_ZOOM;
 
-					var st = new ScaleTransform(scale, scale);
-					st.Freeze();
-					scaleElement.LayoutTransform = st;
-				}
 				currentScaleValue = scale;
+
+				if (scaleElement != null)
+					AddScaleTransform();
 			}
 		}
 		double currentScaleValue = 1;
+		MetroWindow metroWindow;
+
+		void AddScaleTransform() {
+			var mwin = GetWindow();
+			if (mwin != null)
+				mwin.SetScaleTransform(scaleElement, currentScaleValue);
+		}
+
+		MetroWindow GetWindow() {
+			Debug.Assert(scaleElement != null);
+			if (metroWindow != null)
+				return metroWindow;
+			if (scaleElement == null)
+				return null;
+
+			var win = Window.GetWindow(scaleElement);
+			metroWindow = win as MetroWindow;
+			if (metroWindow != null) {
+				metroWindow.WindowDPIChanged += MetroWindow_WindowDPIChanged;
+				return metroWindow;
+			}
+
+			Debug.Assert(!scaleElement.IsLoaded);
+			if (!scaleElement.IsLoaded)
+				scaleElement.Loaded += ScaleElement_Loaded;
+			return null;
+		}
+
+		void MetroWindow_WindowDPIChanged(object sender, EventArgs e) {
+			Debug.Assert(sender != null && sender == metroWindow);
+			((MetroWindow)sender).SetScaleTransform(scaleElement, currentScaleValue);
+		}
+
+		void ScaleElement_Loaded(object sender, RoutedEventArgs e) {
+			var fe = (FrameworkElement)sender;
+			fe.Loaded -= ScaleElement_Loaded;
+			AddScaleTransform();
+		}
 
 		public void Dispose() {
 			UninstallScale();

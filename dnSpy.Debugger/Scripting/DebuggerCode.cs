@@ -25,11 +25,11 @@ using dnSpy.Shared.Scripting;
 
 namespace dnSpy.Debugger.Scripting {
 	sealed class DebuggerCode : IDebuggerCode {
-		public IDebuggerFunction Function {
+		public IDebuggerMethod Method {
 			get {
 				return debugger.Dispatcher.UI(() => {
 					var func = code.Function;
-					return func == null ? null : new DebuggerFunction(debugger, func);
+					return func == null ? null : new DebuggerMethod(debugger, func);
 				});
 			}
 		}
@@ -79,6 +79,10 @@ namespace dnSpy.Debugger.Scripting {
 					res[i] = new CodeChunkInfo(chunks[i].StartAddr, chunks[i].Length);
 				return res;
 			});
+		}
+
+		public byte[] ReadCode() {
+			return debugger.ReadMemory(Address, Size);
 		}
 
 		public IILBreakpoint CreateBreakpoint(uint offset, Func<IILBreakpoint, bool> cond) {

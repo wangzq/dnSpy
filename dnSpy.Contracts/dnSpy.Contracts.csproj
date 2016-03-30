@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -8,8 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>dnSpy.Contracts</RootNamespace>
     <AssemblyName>dnSpy.Contracts</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
+    <TargetFrameworkVersion>v4.6</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\dnSpy.snk</AssemblyOriginatorKeyFile>
@@ -38,7 +38,6 @@
     <NoWarn>1685</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="App\AppCulture.cs" />
     <Compile Include="App\AppDirectories.cs" />
     <Compile Include="App\IAppCommandLineArgs.cs" />
     <Compile Include="App\IAppCommandLineArgsHandler.cs" />
@@ -187,7 +186,6 @@
     <Compile Include="Languages\DecompilerOptionConstants.cs" />
     <Compile Include="Languages\DecompileTypeBase.cs" />
     <Compile Include="Languages\IBamlDecompiler.cs" />
-    <Compile Include="Languages\IDecompilationContext.cs" />
     <Compile Include="Languages\IDecompilerOption.cs" />
     <Compile Include="Languages\IDecompilerSettings.cs" />
     <Compile Include="Languages\IDecompilerSettingsTab.cs" />
@@ -221,6 +219,7 @@
     <Compile Include="Plugin\PluginInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scripting\Debugger\AttachOptions.cs" />
+    <Compile Include="Scripting\Debugger\Box.cs" />
     <Compile Include="Scripting\Debugger\BreakpointKind.cs" />
     <Compile Include="Scripting\Debugger\BreakProcessKind.cs" />
     <Compile Include="Scripting\Debugger\ChainReason.cs" />
@@ -229,9 +228,11 @@
     <Compile Include="Scripting\Debugger\CorElementType.cs" />
     <Compile Include="Scripting\Debugger\DebugEventKind.cs" />
     <Compile Include="Scripting\Debugger\DebuggerEventArgs.cs" />
+    <Compile Include="Scripting\Debugger\DebuggerPauseState.cs" />
     <Compile Include="Scripting\Debugger\DebuggerProcessState.cs" />
     <Compile Include="Scripting\Debugger\DebugHandleType.cs" />
     <Compile Include="Scripting\Debugger\DebugOptions.cs" />
+    <Compile Include="Scripting\Debugger\DebugStepReason.cs" />
     <Compile Include="Scripting\Debugger\ExceptionObjectStackFrame.cs" />
     <Compile Include="Scripting\Debugger\IAnyEventBreakpoint.cs" />
     <Compile Include="Scripting\Debugger\IAppDomain.cs" />
@@ -242,10 +243,15 @@
     <Compile Include="Scripting\Debugger\IDebuggerAssembly.cs" />
     <Compile Include="Scripting\Debugger\IDebuggerClass.cs" />
     <Compile Include="Scripting\Debugger\IDebuggerCode.cs" />
-    <Compile Include="Scripting\Debugger\IDebuggerFunction.cs" />
+    <Compile Include="Scripting\Debugger\IDebuggerEvent.cs" />
+    <Compile Include="Scripting\Debugger\IDebuggerField.cs" />
+    <Compile Include="Scripting\Debugger\IDebuggerMethod.cs" />
     <Compile Include="Scripting\Debugger\IDebuggerModule.cs" />
+    <Compile Include="Scripting\Debugger\IDebuggerProperty.cs" />
+    <Compile Include="Scripting\Debugger\IDebuggerThread.cs" />
     <Compile Include="Scripting\Debugger\IDebuggerType.cs" />
     <Compile Include="Scripting\Debugger\IDebuggerValue.cs" />
+    <Compile Include="Scripting\Debugger\IEval.cs" />
     <Compile Include="Scripting\Debugger\IEventBreakpoint.cs" />
     <Compile Include="Scripting\Debugger\IILBreakpoint.cs" />
     <Compile Include="Scripting\Debugger\ILCodeKind.cs" />
@@ -254,7 +260,6 @@
     <Compile Include="Scripting\Debugger\InternalFrameType.cs" />
     <Compile Include="Scripting\Debugger\IStackChain.cs" />
     <Compile Include="Scripting\Debugger\IStackFrame.cs" />
-    <Compile Include="Scripting\Debugger\IThread.cs" />
     <Compile Include="Scripting\Debugger\MappingResult.cs" />
     <Compile Include="Scripting\Debugger\ModuleName.cs" />
     <Compile Include="Scripting\Debugger\ThreadState.cs" />

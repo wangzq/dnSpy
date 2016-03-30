@@ -33,6 +33,11 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		bool IsEnabled { get; set; }
 
 		/// <summary>
+		/// The user can set this property to any value. It's not used by the debugger.
+		/// </summary>
+		object Tag { get; set; }
+
+		/// <summary>
 		/// Removes the breakpoint
 		/// </summary>
 		void Remove();

@@ -19,6 +19,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Text;
 using dndbg.Engine;
 using dnSpy.Contracts.Highlighting;
 using dnSpy.Contracts.Scripting.Debugger;
@@ -80,7 +84,7 @@ namespace dnSpy.Debugger.Scripting {
 		public IDebuggerValue DereferencedValue {
 			get {
 				return debugger.Dispatcher.UI(() => {
-					var res = value.DereferencedValue;
+					var res = value.NeuterCheckDereferencedValue;
 					return res == null ? null : new DebuggerValue(debugger, res);
 				});
 			}
@@ -171,15 +175,6 @@ namespace dnSpy.Debugger.Scripting {
 			get { return (this.vflags & VFlags.ValueClass) != 0; }
 		}
 
-		public IDebuggerValue NeuterCheckDereferencedValue {
-			get {
-				return debugger.Dispatcher.UI(() => {
-					var res = value.NeuterCheckDereferencedValue;
-					return res == null ? null : new DebuggerValue(debugger, res);
-				});
-			}
-		}
-
 		public uint Rank {
 			get { return debugger.Dispatcher.UI(() => value.Rank); }
 		}
@@ -219,8 +214,12 @@ namespace dnSpy.Debugger.Scripting {
 			}
 		}
 
-		readonly Debugger debugger;
+		public CorValue CorValue {
+			get { return value; }
+		}
 		readonly CorValue value;
+
+		readonly Debugger debugger;
 		readonly int hashCode;
 		readonly ulong address;
 		readonly ulong size;
@@ -312,10 +311,22 @@ namespace dnSpy.Debugger.Scripting {
 			});
 		}
 
+		CorValue ReadField(IDebuggerClass cls, uint token) {
+			var v = value;
+			if (v.IsReference)
+				v = v.DereferencedValue;
+			if (v != null && v.IsBox)
+				v = v.BoxedValue;
+			if (v == null)
+				return null;
+			Debug.Assert(v.IsObject);
+			return v.GetFieldValue(((DebuggerClass)cls).CorClass, token);
+		}
+
 		public IDebuggerValue GetFieldValue(IDebuggerClass cls, uint token) {
 			return debugger.Dispatcher.UI(() => {
-				var corValue = value.GetFieldValue(((DebuggerClass)cls).CorClass, token);
-				return corValue == null ? null : new DebuggerValue(debugger, corValue);
+				var res = ReadField(cls, token);
+				return res == null ? null : new DebuggerValue(debugger, res);
 			});
 		}
 
@@ -329,6 +340,67 @@ namespace dnSpy.Debugger.Scripting {
 			});
 			value = valueTmp;
 			return res;
+		}
+
+		public IDebuggerValue Read(IDebuggerField field) {
+			return debugger.Dispatcher.UI(() => {
+				var res = ReadField(field.Class, field.Token);
+				return res == null ? null : new DebuggerValue(debugger, res);
+			});
+		}
+
+		public IDebuggerValue Read(uint token) {
+			return debugger.Dispatcher.UI(() => {
+				var type = Type;
+				var field = type == null ? null : Type.GetFields().FirstOrDefault(a => a.Token == token);
+				if (field == null)
+					return null;
+				var res = ReadField(field.Class, field.Token);
+				return res == null ? null : new DebuggerValue(debugger, res);
+			});
+		}
+
+		public IDebuggerValue Read(string name, bool checkBaseClasses) {
+			return debugger.Dispatcher.UI(() => {
+				var type = Type;
+				var field = type == null ? null : Type.GetField(name, checkBaseClasses);
+				if (field == null)
+					return null;
+				var res = ReadField(field.Class, field.Token);
+				return res == null ? null : new DebuggerValue(debugger, res);
+			});
+		}
+
+		object[] CreateArguments(object[] args) {
+			var res = new object[args.Length + 1];
+			res[0] = new Box(this);
+			for (int i = 0; i < args.Length; i++)
+				res[i + 1] = args[i];
+			return res;
+		}
+
+		public IDebuggerValue Call(IDebuggerThread thread, IDebuggerMethod method, params object[] args) {
+			return debugger.Dispatcher.UI(() => thread.Call(method, CreateArguments(args)));
+		}
+
+		public IDebuggerValue Call(IDebuggerThread thread, object[] genericArgs, IDebuggerMethod method, params object[] args) {
+			return debugger.Dispatcher.UI(() => thread.Call(genericArgs, method, CreateArguments(args)));
+		}
+
+		public IDebuggerValue Call(IDebuggerThread thread, string modName, string className, string methodName, params object[] args) {
+			return debugger.Dispatcher.UI(() => thread.Call(modName, className, methodName, CreateArguments(args)));
+		}
+
+		public IDebuggerValue Call(IDebuggerThread thread, string modName, uint token, params object[] args) {
+			return debugger.Dispatcher.UI(() => thread.Call(modName, token, CreateArguments(args)));
+		}
+
+		public IDebuggerValue Call(IDebuggerThread thread, object[] genericArgs, string modName, string className, string methodName, params object[] args) {
+			return debugger.Dispatcher.UI(() => thread.Call(genericArgs, modName, className, methodName, CreateArguments(args)));
+		}
+
+		public IDebuggerValue Call(IDebuggerThread thread, object[] genericArgs, string modName, uint token, params object[] args) {
+			return debugger.Dispatcher.UI(() => thread.Call(genericArgs, modName, token, CreateArguments(args)));
 		}
 
 		public byte[] Read() {
@@ -448,23 +520,7 @@ namespace dnSpy.Debugger.Scripting {
 		}
 
 		public decimal ReadDecimal() {
-			return debugger.Dispatcher.UI(() => {
-				var d = value.ReadGenericValue();
-				if (d == null || d.Length != 16)
-					return decimal.Zero;
-
-				var decimalBits = new int[4];
-				decimalBits[3] = BitConverter.ToInt32(d, 0);
-				decimalBits[2] = BitConverter.ToInt32(d, 4);
-				decimalBits[0] = BitConverter.ToInt32(d, 8);
-				decimalBits[1] = BitConverter.ToInt32(d, 12);
-				try {
-					return new decimal(decimalBits);
-				}
-				catch (ArgumentException) {
-				}
-				return decimal.Zero;
-			});
+			return debugger.Dispatcher.UI(() => Utils.ToDecimal(value.ReadGenericValue()));
 		}
 
 		public void Write(bool value) {
@@ -476,7 +532,7 @@ namespace dnSpy.Debugger.Scripting {
 		}
 
 		public void Write(sbyte value) {
-			debugger.Dispatcher.UI(() => this.value.WriteGenericValue(BitConverter.GetBytes(value)));
+			debugger.Dispatcher.UI(() => this.value.WriteGenericValue(new byte[] { (byte)value }));
 		}
 
 		public void Write(short value) {
@@ -492,7 +548,7 @@ namespace dnSpy.Debugger.Scripting {
 		}
 
 		public void Write(byte value) {
-			debugger.Dispatcher.UI(() => this.value.WriteGenericValue(BitConverter.GetBytes(value)));
+			debugger.Dispatcher.UI(() => this.value.WriteGenericValue(new byte[] { value }));
 		}
 
 		public void Write(ushort value) {
@@ -516,27 +572,114 @@ namespace dnSpy.Debugger.Scripting {
 		}
 
 		public void Write(decimal value) {
-			debugger.Dispatcher.UI(() => {
-				var d = GetBytes(value);
-				this.value.WriteGenericValue(d);
+			debugger.Dispatcher.UI(() => this.value.WriteGenericValue(Utils.GetBytes(value)));
+		}
+
+		CorValue GetDataValue() {
+			var v = value;
+			for (int i = 0; i < 2; i++) {
+				if (!v.IsReference)
+					break;
+				if (v.IsNull)
+					return null;
+				if (v.Type == dndbg.COM.CorDebug.CorElementType.Ptr || v.Type == dndbg.COM.CorDebug.CorElementType.FnPtr)
+					return null;
+				v = v.NeuterCheckDereferencedValue;
+				if (v == null)
+					return null;
+			}
+			if (v.IsReference)
+				return null;
+			if (v.IsBox) {
+				v = v.BoxedValue;
+				if (v == null)
+					return null;
+			}
+			return v;
+		}
+
+		public byte[] SaveData() {
+			return debugger.Dispatcher.UI(() => {
+				byte[] data;
+				int? dataIndex = null, dataSize = null;
+				var v = GetDataValue();
+				if (v == null)
+					return new byte[0];
+				if (v.IsString) {
+					var s = v.String;
+					data = s == null ? null : Encoding.Unicode.GetBytes(s);
+				}
+				else if (v.IsArray) {
+					if (v.ArrayCount == 0)
+						data = new byte[0];
+					else {
+						var elemValue = v.GetElementAtPosition(0);
+						ulong elemSize = elemValue == null ? 0 : elemValue.Size;
+						ulong elemAddr = elemValue == null ? 0 : elemValue.Address;
+						ulong addr = v.Address;
+						ulong totalSize = elemSize * v.ArrayCount;
+						if (elemAddr == 0 || elemAddr < addr || elemAddr - addr > int.MaxValue || totalSize > int.MaxValue)
+							return new byte[0];
+						data = v.ReadGenericValue();
+						dataIndex = (int)(elemAddr - addr);
+						dataSize = (int)totalSize;
+					}
+				}
+				else
+					data = v.ReadGenericValue();
+				if (data == null)
+					return new byte[0];
+
+				if (dataIndex == null)
+					dataIndex = 0;
+				if (dataSize == null)
+					dataSize = data.Length - dataIndex.Value;
+				var data2 = new byte[dataSize.Value];
+				Array.Copy(data, dataIndex.Value, data2, 0, data2.Length);
+				return data2;
 			});
 		}
 
-		static byte[] GetBytes(decimal d) {
-			var decimalBits = decimal.GetBits(d);
-			var bytes = new byte[16];
-			WriteInt32(bytes, 0, decimalBits[3]);
-			WriteInt32(bytes, 4, decimalBits[2]);
-			WriteInt32(bytes, 8, decimalBits[0]);
-			WriteInt32(bytes, 12, decimalBits[1]);
-			return bytes;
+		public void SaveData(Stream stream) {
+			var bytes = SaveData();
+			stream.Write(bytes, 0, bytes.Length);
 		}
 
-		static void WriteInt32(byte[] dest, int index, int v) {
-			dest[index + 0] = (byte)v;
-			dest[index + 1] = (byte)(v >> 8);
-			dest[index + 2] = (byte)(v >> 16);
-			dest[index + 3] = (byte)(v >> 24);
+		public void SaveData(string filename) {
+			using (var stream = File.Create(filename))
+				SaveData(stream);
+		}
+
+		public ulong GetArrayDataAddress() {
+			ulong elemSize;
+			return GetArrayDataAddress(out elemSize);
+		}
+
+		public ulong GetArrayDataAddress(out ulong elemSize2) {
+			ulong elemSizeTmp = 0;
+			var res = debugger.Dispatcher.UI(() => {
+				var v = GetDataValue();
+				if (v == null)
+					return 0UL;
+				if (!v.IsArray)
+					return 0UL;
+				if (v.ArrayCount == 0)
+					return 0UL;
+
+				var elemValue = v.GetElementAtPosition(0);
+				ulong elemSize = elemValue == null ? 0 : elemValue.Size;
+				ulong elemAddr = elemValue == null ? 0 : elemValue.Address;
+				ulong addr = v.Address;
+				ulong totalSize = elemSize * v.ArrayCount;
+				if (elemAddr == 0 || elemAddr < addr || elemAddr - addr > int.MaxValue || totalSize > int.MaxValue)
+					return 0UL;
+
+				ulong dataIndex = elemAddr - addr;
+				elemSizeTmp = elemSize;
+				return v.Address + dataIndex;
+			});
+			elemSize2 = elemSizeTmp;
+			return res;
 		}
 
 		public override bool Equals(object obj) {

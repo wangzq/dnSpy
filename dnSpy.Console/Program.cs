@@ -29,7 +29,6 @@ using System.Reflection;
 using System.Security;
 using System.Text;
 using dnlib.DotNet;
-using dnSpy.Contracts.App;
 using dnSpy.Contracts.Languages;
 using dnSpy.Decompiler.Shared;
 using dnSpy.Languages.MSBuild;
@@ -51,15 +50,19 @@ namespace dnSpy_Console {
 				return 1;
 			}
 
-			// Make sure its static ctor gets called so it can initialize its fields
-			var u = AppCulture.UICulture;
-
+			var oldEncoding = Console.OutputEncoding;
 			try {
+				// Make sure russian and chinese characters are shown correctly
+				Console.OutputEncoding = Encoding.UTF8;
+
 				return new DnSpyDecompiler().Run(args);
 			}
 			catch (Exception ex) {
 				Console.Error.WriteLine(string.Format("{0}", ex));
 				return 1;
+			}
+			finally {
+				Console.OutputEncoding = oldEncoding;
 			}
 		}
 	}

@@ -18,7 +18,6 @@
 */
 
 using System;
-using System.Runtime.InteropServices;
 using dndbg.COM.CorDebug;
 using dndbg.Engine;
 using dnSpy.Contracts.Images;
@@ -65,12 +64,6 @@ namespace dnSpy.Debugger.Threads {
 	}
 
 	sealed class ThreadVM : ViewModelBase {
-		[DllImport("kernel32", SetLastError = true)]
-		static extern IntPtr SetThreadAffinityMask(IntPtr hThread, IntPtr dwThreadAffinityMask);
-
-		[DllImport("kernel32", SetLastError = true)]
-		static extern int GetThreadPriority(IntPtr hThread);
-
 		public bool IsCurrent {
 			get { return isCurrent; }
 			set {
@@ -232,9 +225,9 @@ namespace dnSpy.Debugger.Threads {
 		public IntPtr AffinityMask {
 			get {
 				if (affinityMask == null) {
-					affinityMask = SetThreadAffinityMask(thread.CorThread.Handle, new IntPtr(-1));
+					affinityMask = NativeMethods.SetThreadAffinityMask(thread.CorThread.Handle, new IntPtr(-1));
 					if (affinityMask.Value != IntPtr.Zero)
-						SetThreadAffinityMask(thread.CorThread.Handle, affinityMask.Value);
+						NativeMethods.SetThreadAffinityMask(thread.CorThread.Handle, affinityMask.Value);
 				}
 				return affinityMask.Value;
 			}
@@ -244,7 +237,7 @@ namespace dnSpy.Debugger.Threads {
 		public ThreadPriority Priority {
 			get {
 				if (prio == null)
-					prio = (ThreadPriority)GetThreadPriority(thread.CorThread.Handle);
+					prio = (ThreadPriority)NativeMethods.GetThreadPriority(thread.CorThread.Handle);
 				return prio.Value;
 			}
 		}
@@ -332,14 +325,14 @@ namespace dnSpy.Debugger.Threads {
 
 		bool CheckIfMainThread() {
 			if (!thread.Process.WasAttached)
-				return thread.IncrementedId == 0;
+				return thread.UniqueIdProcess == 0;
 
 			var ad = thread.AppDomainOrNull;
 			if (ad == null || ad.Id != 1)
 				return false;
 			if (thread.CorThread.IsBackground)
 				return false;
-			return thread.IncrementedId == 0;
+			return thread.UniqueIdProcess == 0;
 		}
 
 		bool CheckIfBGCOrFinalizerThread() {

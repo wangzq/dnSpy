@@ -640,12 +640,33 @@ namespace dndbg.COM.CorDebug {
 		FLUSH_ALL
 	}
 	public enum CorDebugStepReason {
+		/// <summary>
+		/// Stepping completed normally, within the same function.
+		/// </summary>
 		STEP_NORMAL,
+		/// <summary>
+		/// Stepping continued normally, after the function returned.
+		/// </summary>
 		STEP_RETURN,
+		/// <summary>
+		/// Stepping continued normally, at the beginning of a newly called function.
+		/// </summary>
 		STEP_CALL,
+		/// <summary>
+		/// An exception was generated and control was passed to an exception filter.
+		/// </summary>
 		STEP_EXCEPTION_FILTER,
+		/// <summary>
+		/// An exception was generated and control was passed to an exception handler.
+		/// </summary>
 		STEP_EXCEPTION_HANDLER,
+		/// <summary>
+		/// Control was passed to an interceptor.
+		/// </summary>
 		STEP_INTERCEPT,
+		/// <summary>
+		/// The thread exited before the step was completed.
+		/// </summary>
 		STEP_EXIT
 	}
 	public enum CorDebugThreadState {
@@ -785,8 +806,10 @@ namespace dndbg.COM.CorDebug {
 	[Guid("096E81D5-ECDA-4202-83F5-C65980A9EF75"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 	[ComImport]
 	public interface ICorDebugAppDomain2 {
-		void GetArrayOrPointerType([In] CorElementType elementType, [In] uint nRank, [MarshalAs(UnmanagedType.Interface)] [In] ICorDebugType pTypeArg, [MarshalAs(UnmanagedType.Interface)] out ICorDebugType ppType);
-		void GetFunctionPointerType([In] uint nTypeArgs, [MarshalAs(UnmanagedType.Interface)] [In] ref ICorDebugType ppTypeArgs, [MarshalAs(UnmanagedType.Interface)] out ICorDebugType ppType);
+		[PreserveSig]
+		int GetArrayOrPointerType([In] CorElementType elementType, [In] uint nRank, [MarshalAs(UnmanagedType.Interface)] [In] ICorDebugType pTypeArg, [MarshalAs(UnmanagedType.Interface)] out ICorDebugType ppType);
+		[PreserveSig]
+		int GetFunctionPointerType([In] int nTypeArgs, [MarshalAs(UnmanagedType.LPArray)] [In] ICorDebugType[] ppTypeArgs, [MarshalAs(UnmanagedType.Interface)] out ICorDebugType ppType);
 	}
 	[Guid("8CB96A16-B588-42E2-B71C-DD849FC2ECCC"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 	[ComImport]

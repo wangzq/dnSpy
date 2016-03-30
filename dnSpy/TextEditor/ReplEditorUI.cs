@@ -78,6 +78,7 @@ namespace dnSpy.TextEditor {
 			this.dispatcher = Dispatcher.CurrentDispatcher;
 			this.options = (options ?? new ReplEditorOptions()).Clone();
 			this.textEditor = new NewTextEditor(themeManager, textEditorSettings);
+			this.textEditor.TextArea.AllowDrop = false;
 			this.textEditor.TextArea.Document = new TextDocument();
 			this.textEditor.TextArea.Document.UndoStack.SizeLimit = 100;
 			this.textEditor.TextArea.LeftMargins.Insert(0, new FrameworkElement { Margin = new Thickness(LEFT_MARGIN, 0, 0, 0) });
@@ -454,8 +455,14 @@ namespace dnSpy.TextEditor {
 		}
 
 		void TextArea_TextEntering(object sender, TextCompositionEventArgs e) {
-			AddUserInput(e.Text);
 			e.Handled = true;
+			if (!UpdateCaretForEdit())
+				return;
+
+			var ta = textEditor.TextArea;
+			if (ta.OverstrikeMode && ta.Selection.IsEmpty && ta.Document.GetLineByNumber(ta.Caret.Line).EndOffset > ta.Caret.Offset)
+				EditingCommands.SelectRightByCharacter.Execute(null, ta);
+			AddUserInput(e.Text);
 		}
 
 		string GetNewString(string s) {

@@ -41,9 +41,20 @@ namespace dndbg.Engine {
 		Module,
 		Token,
 		NamespacePart,
+		InstanceProperty,
+		StaticProperty,
+		InstanceEvent,
+		StaticEvent,
 		Type,
+		StaticType,
+		Delegate,
+		Enum,
+		Interface,
+		ValueType,
 		Comment,
-		Method,
+		StaticMethod,
+		ExtensionMethod,
+		InstanceMethod,
 		TypeKeyword,
 		TypeGenericParameter,
 		MethodGenericParameter,
@@ -51,7 +62,10 @@ namespace dndbg.Engine {
 		Parameter,
 		String,
 		Char,
+		InstanceField,
 		EnumField,
+		LiteralField,
+		StaticField,
 		TypeStringBrace,
 		ToStringBrace,
 		ToStringResult,
@@ -87,6 +101,8 @@ namespace dndbg.Engine {
 		ShowTokens					= 0x00000200,
 		ShowIP						= 0x00000400,
 		ShowArrayValueSizes			= 0x00000800,
+		ShowFieldLiteralValues		= 0x00001000,
+		ShowParameterLiteralValues	= 0x00002000,
 
 		Default =
 			ShowModuleNames |
@@ -95,7 +111,8 @@ namespace dndbg.Engine {
 			ShowOwnerTypes |
 			ShowNamespaces |
 			ShowTypeKeywords |
-			ShowArrayValueSizes,
+			ShowArrayValueSizes |
+			ShowFieldLiteralValues,
 	}
 
 	struct TypePrinter {
@@ -157,6 +174,14 @@ namespace dndbg.Engine {
 
 		bool ShowArrayValueSizes {
 			get { return (flags & TypePrinterFlags.ShowArrayValueSizes) != 0; }
+		}
+
+		bool ShowFieldLiteralValues {
+			get { return (flags & TypePrinterFlags.ShowFieldLiteralValues) != 0; }
+		}
+
+		bool ShowParameterLiteralValues {
+			get { return (flags & TypePrinterFlags.ShowParameterLiteralValues) != 0; }
 		}
 
 		public TypePrinter(ITypeOutput output, TypePrinterFlags flags, Func<DnEval> getEval = null) {
@@ -308,6 +333,108 @@ namespace dndbg.Engine {
 			}
 		}
 
+		void WriteClassOrValueType(CorClass cls) {
+			if (cls == null) {
+				Write(cls);
+				return;
+			}
+			var type = cls.GetParameterizedType(CorElementType.Class);
+			if (type == null)
+				Write(cls);
+			else
+				WriteClassOrValueType(type, cls);
+		}
+
+		// If anything fails, it calls Write(CorClass). Must not call Write(CorType)
+		void WriteClassOrValueType(CorType type, CorClass cls) {
+			if (type == null || cls == null) {
+				Write(cls);
+				return;
+			}
+
+			var mod = cls.Module;
+			var mdi = GetMetaDataImport(mod);
+			if (mdi == null) {
+				Write(cls);
+				return;
+			}
+
+			var types = GetEnclosingTypesAndSelf(type, cls, mod, mdi);
+			if (types == null) {
+				Write(cls);
+				return;
+			}
+
+			for (int i = 0; i < types.Count; i++) {
+				if (i > 0)
+					OutputWrite(".", TypeColor.Operator);
+
+				uint token = types[i].Item2.Token;
+				var fullName = MDAPI.GetTypeDefName(mdi, token);
+
+				var typeKeyword = !ShowTypeKeywords || i != 0 ? null : GetTypeKeyword(fullName);
+				if (typeKeyword != null)
+					OutputWrite(typeKeyword, TypeColor.TypeKeyword);
+				else
+					WriteTypeName(fullName, token, GetTypeColor(types[i].Item1, types[i].Item2));
+			}
+		}
+
+		TypeColor GetTypeColor(CorType type, CorClass cls) {
+			var attrs = cls.GetTypeAttributes();
+
+			if ((attrs & TypeAttributes.ClassSemanticsMask) == TypeAttributes.Interface)
+				return TypeColor.Interface;
+			if (type.IsEnum)
+				return TypeColor.Enum;
+			if (type.IsValueType)
+				return TypeColor.ValueType;
+
+			var baseType = type.Base;
+			if (IsDelegate(baseType, attrs))
+				return TypeColor.Delegate;
+
+			if (baseType != null &&
+				(attrs & (TypeAttributes.Sealed | TypeAttributes.Abstract)) == (TypeAttributes.Sealed | TypeAttributes.Abstract) &&
+				baseType.IsSystemObject) {
+				return TypeColor.StaticType;
+			}
+
+			return TypeColor.Type;
+		}
+
+		static bool IsDelegate(CorType baseType, TypeAttributes attrs) {
+			if (baseType == null)
+				return false;
+			if ((attrs & (TypeAttributes.Abstract | TypeAttributes.Sealed | TypeAttributes.ClassSemanticsMask)) != (TypeAttributes.Sealed | TypeAttributes.Class))
+				return false;
+			return baseType.IsSystem("MulticastDelegate");
+		}
+
+		List<Tuple<CorType, CorClass>> GetEnclosingTypesAndSelf(CorType type, CorClass cls, CorModule module, IMetaDataImport mdi) {
+			var list = new List<Tuple<CorType, CorClass>>();
+			list.Add(Tuple.Create(type, cls));
+			uint token = cls.Token;
+			if (token == 0)
+				return null;
+			for (;;) {
+				token = MDAPI.GetTypeDefEnclosingType(mdi, token);
+				if (token == 0)
+					break;
+
+				cls = module.GetClassFromToken(token);
+				if (cls == null)
+					return null;
+				type = cls.GetParameterizedType(CorElementType.Class);
+				if (type == null)
+					return null;
+				list.Add(Tuple.Create(type, cls));
+			}
+
+			list.Reverse();
+			return list;
+		}
+
 		void WriteTypeDef(IMetaDataImport mdi, uint token) {
 			var list = MetaDataUtils.GetTypeDefFullNames(mdi, token);
 			WriteTypeList(list, token);
@@ -332,21 +459,26 @@ namespace dndbg.Engine {
 					OutputWrite(typeKeyword, TypeColor.TypeKeyword);
 				else {
 					var info = list[i];
-					WriteTypeName(info.Name, info.Token);
+					WriteTypeName(info.Name, info.Token, TypeColor.Type);
 				}
 			}
 		}
 
 		void WriteTypeSpec(IMetaDataImport mdi, uint token) {
 			// This code should be unreachable
+			Debug.Fail("WriteTypeSpec() should be unreachable");
 			OutputWrite(string.Format("type_{0:X8}", token), TypeColor.Error);
 		}
 
 		static string GetTypeKeyword(IList<TokenAndName> list, int index) {
 			if (list.Count != 1)
 				return null;
+			return GetTypeKeyword(list[0].Name);
+		}
 
-			switch (list[0].Name) {
+		static string GetTypeKeyword(string name) {
+			switch (name) {
+			case "System.Void":		return "void";
 			case "System.Boolean":	return "bool";
 			case "System.Byte":		return "byte";
 			case "System.Char":		return "char";
@@ -366,7 +498,7 @@ namespace dndbg.Engine {
 			}
 		}
 
-		void WriteTypeName(string name, uint token) {
+		void WriteTypeName(string name, uint token, TypeColor typeColor) {
 			var parts = name.Split(dot);
 			if (ShowNamespaces) {
 				for (int i = 1; i < parts.Length; i++) {
@@ -374,7 +506,7 @@ namespace dndbg.Engine {
 					OutputWrite(".", TypeColor.Operator);
 				}
 			}
-			WriteIdentifier(RemoveGenericTick(parts[parts.Length - 1]), TypeColor.Type);
+			WriteIdentifier(RemoveGenericTick(parts[parts.Length - 1]), typeColor);
 			WriteTokenComment(token);
 		}
 		static readonly char[] dot = new char[1] { '.' };
@@ -467,25 +599,25 @@ namespace dndbg.Engine {
 				}
 
 				switch (type.ElementType) {
-				case CorElementType.Void:		WriteSystemTypeKeyword("Void", "void"); break;
-				case CorElementType.Boolean:	WriteSystemTypeKeyword("Boolean", "bool"); break;
-				case CorElementType.Char:		WriteSystemTypeKeyword("Char", "char"); break;
-				case CorElementType.I1:			WriteSystemTypeKeyword("SByte", "sbyte"); break;
-				case CorElementType.U1:			WriteSystemTypeKeyword("Byte", "byte"); break;
-				case CorElementType.I2:			WriteSystemTypeKeyword("Int16", "short"); break;
-				case CorElementType.U2:			WriteSystemTypeKeyword("UInt16", "ushort"); break;
-				case CorElementType.I4:			WriteSystemTypeKeyword("Int32", "int"); break;
-				case CorElementType.U4:			WriteSystemTypeKeyword("UInt32", "uint"); break;
-				case CorElementType.I8:			WriteSystemTypeKeyword("Int64", "long"); break;
-				case CorElementType.U8:			WriteSystemTypeKeyword("UInt64", "ulong"); break;
-				case CorElementType.R4:			WriteSystemTypeKeyword("Single", "float"); break;
-				case CorElementType.R8:			WriteSystemTypeKeyword("Double", "double"); break;
-				case CorElementType.String:		WriteSystemTypeKeyword("String", "string"); break;
-				case CorElementType.Object:		WriteSystemTypeKeyword("Object", "object"); break;
+				case CorElementType.Void:		WriteSystemTypeKeyword("Void", "void", TypeColor.ValueType); break;
+				case CorElementType.Boolean:	WriteSystemTypeKeyword("Boolean", "bool", TypeColor.ValueType); break;
+				case CorElementType.Char:		WriteSystemTypeKeyword("Char", "char", TypeColor.ValueType); break;
+				case CorElementType.I1:			WriteSystemTypeKeyword("SByte", "sbyte", TypeColor.ValueType); break;
+				case CorElementType.U1:			WriteSystemTypeKeyword("Byte", "byte", TypeColor.ValueType); break;
+				case CorElementType.I2:			WriteSystemTypeKeyword("Int16", "short", TypeColor.ValueType); break;
+				case CorElementType.U2:			WriteSystemTypeKeyword("UInt16", "ushort", TypeColor.ValueType); break;
+				case CorElementType.I4:			WriteSystemTypeKeyword("Int32", "int", TypeColor.ValueType); break;
+				case CorElementType.U4:			WriteSystemTypeKeyword("UInt32", "uint", TypeColor.ValueType); break;
+				case CorElementType.I8:			WriteSystemTypeKeyword("Int64", "long", TypeColor.ValueType); break;
+				case CorElementType.U8:			WriteSystemTypeKeyword("UInt64", "ulong", TypeColor.ValueType); break;
+				case CorElementType.R4:			WriteSystemTypeKeyword("Single", "float", TypeColor.ValueType); break;
+				case CorElementType.R8:			WriteSystemTypeKeyword("Double", "double", TypeColor.ValueType); break;
+				case CorElementType.String:		WriteSystemTypeKeyword("String", "string", TypeColor.Type); break;
+				case CorElementType.Object:		WriteSystemTypeKeyword("Object", "object", TypeColor.Type); break;
 
-				case CorElementType.TypedByRef:	WriteSystemType("TypedReference"); break;
-				case CorElementType.I:			WriteSystemType("IntPtr"); break;
-				case CorElementType.U:			WriteSystemType("UIntPtr"); break;
+				case CorElementType.TypedByRef:	WriteSystemType("TypedReference", TypeColor.ValueType); break;
+				case CorElementType.I:			WriteSystemType("IntPtr", TypeColor.ValueType); break;
+				case CorElementType.U:			WriteSystemType("UIntPtr", TypeColor.ValueType); break;
 
 				case CorElementType.Ptr:
 					Write(type.FirstTypeParameter, value == null ? null : value.NeuterCheckDereferencedValue);
@@ -497,18 +629,17 @@ namespace dndbg.Engine {
 					OutputWrite("&", TypeColor.Operator);
 					break;
 
+				case CorElementType.Class:
 				case CorElementType.ValueType:
 					if (type.IsSystemNullable) {
 						Write(type.FirstTypeParameter);
 						OutputWrite("?", TypeColor.Operator);
 						break;
 					}
-					goto case CorElementType.Class;
-				case CorElementType.Class:
 					var cls = type.Class;
-					Write(cls);
+					WriteClassOrValueType(type, cls);
 					if (cls != null)
-						WriteGenericParameters(cls.Module, cls.Token, new List<CorType>(type.TypeParameters), false);
+						WriteGenericParameters(cls.Module, cls.Token, new List<CorType>(type.TypeParameters), emptyTokenAndNameList, false);
 					break;
 
 				case CorElementType.FnPtr:
@@ -545,7 +676,8 @@ namespace dndbg.Engine {
 			return list[index];
 		}
 
-		public void Write(TypeSig type, IList<CorType> typeGenArgs = null, IList<CorType> methGenArgs = null) {
+		static readonly CorType[] emptyCorTypeArray = new CorType[0];
+		public void Write(TypeSig type, IList<CorType> typeGenArgs = null, IList<CorType> methGenArgs = null, IList<TokenAndName> typeTokenAndNames = null, IList<TokenAndName> methTokenAndNames = null) {
 			try {
 				if (recursionCounter++ >= MAX_RECURSION)
 					return;
@@ -555,9 +687,13 @@ namespace dndbg.Engine {
 				}
 
 				if (typeGenArgs == null)
-					typeGenArgs = new CorType[0];
+					typeGenArgs = emptyCorTypeArray;
 				if (methGenArgs == null)
-					methGenArgs = new CorType[0];
+					methGenArgs = emptyCorTypeArray;
+				if (typeTokenAndNames == null)
+					typeTokenAndNames = emptyTokenAndNameList;
+				if (methTokenAndNames == null)
+					methTokenAndNames = emptyTokenAndNameList;
 
 				// It's shown reverse in C# so need to collect all array types here
 				List<ArraySigBase> list = null;
@@ -568,7 +704,7 @@ namespace dndbg.Engine {
 					type = type.Next;
 				}
 				if (list != null) {
-					Write(list[list.Count - 1].Next, typeGenArgs, methGenArgs);
+					Write(list[list.Count - 1].Next, typeGenArgs, methGenArgs, typeTokenAndNames, methTokenAndNames);
 					foreach (var aryType in list) {
 						if (aryType.ElementType == ElementType.Array) {
 							OutputWrite("[", TypeColor.Operator);
@@ -596,38 +732,39 @@ namespace dndbg.Engine {
 				}
 
 				switch (type.ElementType) {
-				case ElementType.Void:			WriteSystemTypeKeyword("Void", "void"); break;
-				case ElementType.Boolean:		WriteSystemTypeKeyword("Boolean", "bool"); break;
-				case ElementType.Char:			WriteSystemTypeKeyword("Char", "char"); break;
-				case ElementType.I1:			WriteSystemTypeKeyword("SByte", "sbyte"); break;
-				case ElementType.U1:			WriteSystemTypeKeyword("Byte", "byte"); break;
-				case ElementType.I2:			WriteSystemTypeKeyword("Int16", "short"); break;
-				case ElementType.U2:			WriteSystemTypeKeyword("UInt16", "ushort"); break;
-				case ElementType.I4:			WriteSystemTypeKeyword("Int32", "int"); break;
-				case ElementType.U4:			WriteSystemTypeKeyword("UInt32", "uint"); break;
-				case ElementType.I8:			WriteSystemTypeKeyword("Int64", "long"); break;
-				case ElementType.U8:			WriteSystemTypeKeyword("UInt64", "ulong"); break;
-				case ElementType.R4:			WriteSystemTypeKeyword("Single", "float"); break;
-				case ElementType.R8:			WriteSystemTypeKeyword("Double", "double"); break;
-				case ElementType.String:		WriteSystemTypeKeyword("String", "string"); break;
-				case ElementType.Object:		WriteSystemTypeKeyword("Object", "object"); break;
+				case ElementType.Void:			WriteSystemTypeKeyword("Void", "void", TypeColor.ValueType); break;
+				case ElementType.Boolean:		WriteSystemTypeKeyword("Boolean", "bool", TypeColor.ValueType); break;
+				case ElementType.Char:			WriteSystemTypeKeyword("Char", "char", TypeColor.ValueType); break;
+				case ElementType.I1:			WriteSystemTypeKeyword("SByte", "sbyte", TypeColor.ValueType); break;
+				case ElementType.U1:			WriteSystemTypeKeyword("Byte", "byte", TypeColor.ValueType); break;
+				case ElementType.I2:			WriteSystemTypeKeyword("Int16", "short", TypeColor.ValueType); break;
+				case ElementType.U2:			WriteSystemTypeKeyword("UInt16", "ushort", TypeColor.ValueType); break;
+				case ElementType.I4:			WriteSystemTypeKeyword("Int32", "int", TypeColor.ValueType); break;
+				case ElementType.U4:			WriteSystemTypeKeyword("UInt32", "uint", TypeColor.ValueType); break;
+				case ElementType.I8:			WriteSystemTypeKeyword("Int64", "long", TypeColor.ValueType); break;
+				case ElementType.U8:			WriteSystemTypeKeyword("UInt64", "ulong", TypeColor.ValueType); break;
+				case ElementType.R4:			WriteSystemTypeKeyword("Single", "float", TypeColor.ValueType); break;
+				case ElementType.R8:			WriteSystemTypeKeyword("Double", "double", TypeColor.ValueType); break;
+				case ElementType.String:		WriteSystemTypeKeyword("String", "string", TypeColor.Type); break;
+				case ElementType.Object:		WriteSystemTypeKeyword("Object", "object", TypeColor.Type); break;
 
-				case ElementType.TypedByRef:	WriteSystemType("TypedReference"); break;
-				case ElementType.I:				WriteSystemType("IntPtr"); break;
-				case ElementType.U:				WriteSystemType("UIntPtr"); break;
+				case ElementType.TypedByRef:	WriteSystemType("TypedReference", TypeColor.ValueType); break;
+				case ElementType.I:				WriteSystemType("IntPtr", TypeColor.ValueType); break;
+				case ElementType.U:				WriteSystemType("UIntPtr", TypeColor.ValueType); break;
 
 				case ElementType.Ptr:
-					Write(type.Next, typeGenArgs, methGenArgs);
+					Write(type.Next, typeGenArgs, methGenArgs, typeTokenAndNames, methTokenAndNames);
 					OutputWrite("*", TypeColor.Operator);
 					break;
 
 				case ElementType.ByRef:
-					Write(type.Next, typeGenArgs, methGenArgs);
+					Write(type.Next, typeGenArgs, methGenArgs, typeTokenAndNames, methTokenAndNames);
 					OutputWrite("&", TypeColor.Operator);
 					break;
 
 				case ElementType.ValueType:
 				case ElementType.Class:
+					//TODO: Resolve the CorClass so we can use the correct class color
 					var cvt = (TypeDefOrRefSig)type;
 					var mdip = cvt.TypeDefOrRef as IMetaDataImportProvider;
 					if (mdip != null)
@@ -639,26 +776,34 @@ namespace dndbg.Engine {
 					break;
 
 				case ElementType.Var:
-					Write(Read(typeGenArgs, (int)((GenericSig)type).Number));
+					int varIndex = (int)((GenericSig)type).Number;
+					if (typeGenArgs.Count != 0)
+						Write(Read(typeGenArgs, varIndex));
+					else
+						Write(Read(typeTokenAndNames, varIndex), varIndex, true);
 					break;
 
 				case ElementType.MVar:
-					Write(Read(methGenArgs, (int)((GenericSig)type).Number));
+					int mvarIndex = (int)((GenericSig)type).Number;
+					if (methGenArgs.Count != 0)
+						Write(Read(methGenArgs, mvarIndex));
+					else
+						Write(Read(methTokenAndNames, mvarIndex), mvarIndex, false);
 					break;
 
 				case ElementType.GenericInst:
 					var gis = (GenericInstSig)type;
 					if (gis.IsSystemNullable()) {
-						Write(gis.GenericArguments[0], typeGenArgs, methGenArgs);
+						Write(gis.GenericArguments[0], typeGenArgs, methGenArgs, typeTokenAndNames, methTokenAndNames);
 						OutputWrite("?", TypeColor.Operator);
 					}
 					else {
-						Write(gis.GenericType, typeGenArgs, methGenArgs);
+						Write(gis.GenericType, typeGenArgs, methGenArgs, typeTokenAndNames, methTokenAndNames);
 						OutputWrite("<", TypeColor.Operator);
 						for (int i = 0; i < gis.GenericArguments.Count; i++) {
 							if (i > 0)
 								WriteCommaSpace();
-							Write(gis.GenericArguments[i], typeGenArgs, methGenArgs);
+							Write(gis.GenericArguments[i], typeGenArgs, methGenArgs, typeTokenAndNames, methTokenAndNames);
 						}
 						OutputWrite(">", TypeColor.Operator);
 					}
@@ -671,7 +816,7 @@ namespace dndbg.Engine {
 				case ElementType.CModReqd:
 				case ElementType.CModOpt:
 				case ElementType.Pinned:
-					Write(type.Next, typeGenArgs, methGenArgs);
+					Write(type.Next, typeGenArgs, methGenArgs, typeTokenAndNames, methTokenAndNames);
 					break;
 
 				case ElementType.End:
@@ -716,19 +861,19 @@ namespace dndbg.Engine {
 			}
 		}
 
-		void WriteSystemTypeKeyword(string name, string keyword) {
+		void WriteSystemTypeKeyword(string name, string keyword, TypeColor typeColor) {
 			if (ShowTypeKeywords)
 				OutputWrite(keyword, TypeColor.TypeKeyword);
 			else
-				WriteSystemType(name);
+				WriteSystemType(name, typeColor);
 		}
 
-		void WriteSystemType(string name) {
+		void WriteSystemType(string name, TypeColor typeColor) {
 			if (ShowNamespaces) {
 				OutputWrite("System", TypeColor.NamespacePart);
 				OutputWrite(".", TypeColor.Operator);
 			}
-			OutputWrite(name, TypeColor.Type);
+			OutputWrite(name, typeColor);
 		}
 
 		public void Write(CorFrame frame) {
@@ -773,6 +918,209 @@ namespace dndbg.Engine {
 			}
 		}
 
+		public void Write(CorField field) {
+			if (field == null) {
+				OutputWrite("null field", TypeColor.Error);
+				return;
+			}
+
+			try {
+				if (recursionCounter++ >= MAX_RECURSION)
+					return;
+
+				var sig = field.GetFieldSig();
+				var cls = field.Class;
+				var type = cls.GetParameterizedType(CorElementType.Class);
+				bool isEnumOwner = type != null && type.IsEnum;
+
+				var info = GetGenericInfo(null, cls, 0);
+				var fieldAttrs = field.GetAttributes();
+
+				if (!isEnumOwner || (fieldAttrs & FieldAttributes.Literal) == 0) {
+					WriteSpace();
+					Write(sig.Type, info.TypeGenericArguments, info.MethodGenericArguments, info.TypeTokenAndNames, info.MethodTokenAndNames);
+					WriteSpace();
+				}
+				if (ShowOwnerTypes) {
+					Write(type);
+					OutputWrite(".", TypeColor.Operator);
+				}
+				WriteIdentifier(field.GetName(), GetTypeColor(field, type, fieldAttrs));
+				WriteTokenComment(field.Token);
+				if (this.ShowFieldLiteralValues) {
+					object c;
+					if ((fieldAttrs & FieldAttributes.Literal) != 0 && (c = field.GetConstant()) != null) {
+						WriteSpace();
+						OutputWrite("=", TypeColor.Operator);
+						WriteSpace();
+						WriteConstant(c);
+					}
+				}
+			}
+			finally {
+				recursionCounter--;
+			}
+		}
+
+		TypeColor GetTypeColor(CorField field, CorType type, FieldAttributes fieldAttrs) {
+			if (field == null)
+				return TypeColor.InstanceField;
+			if (type != null && type.IsEnum)
+				return TypeColor.EnumField;
+			if ((fieldAttrs & FieldAttributes.Literal) != 0)
+				return TypeColor.LiteralField;
+			if ((fieldAttrs & FieldAttributes.Static) != 0)
+				return TypeColor.StaticField;
+			return TypeColor.InstanceField;
+		}
+
+		public void Write(CorProperty prop) {
+			if (prop == null) {
+				OutputWrite("null property", TypeColor.Error);
+				return;
+			}
+
+			try {
+				if (recursionCounter++ >= MAX_RECURSION)
+					return;
+
+				var getMethod = prop.GetMethod;
+				var setMethod = prop.SetMethod;
+				var accMeth = getMethod ?? setMethod;
+
+				var module = prop.Class.Module;
+				uint token = accMeth == null ? 0 : accMeth.Token;
+
+				var info = GetGenericInfo(null, prop.Class, token);
+
+				MethodSig methodSig = null;
+				bool retTypeIsLastArgType = accMeth == setMethod;
+
+				WriteModuleName(module);
+				WriteReturnType(ref methodSig, retTypeIsLastArgType, module, token, info.TypeGenericArguments, info.MethodGenericArguments, info.TypeTokenAndNames, info.MethodTokenAndNames);
+				if (ShowOwnerTypes) {
+					Write(prop.Class.GetParameterizedType(CorElementType.Class));
+					OutputWrite(".", TypeColor.Operator);
+				}
+				var overrides = accMeth == null ? new CorOverride[0] : accMeth.GetOverrides();
+				var ovrMeth = overrides.Length == 0 ? null : overrides[0].FunctionDeclaration;
+				if (IsIndexer(prop, accMeth, ovrMeth)) {
+					if (ovrMeth != null) {
+						WriteFuncType(ovrMeth);
+						OutputWrite(".", TypeColor.Operator);
+					}
+					OutputWrite("this", TypeColor.Keyword);
+					WriteGenericParameters(module, token, info.MethodGenericArguments, info.MethodTokenAndNames, true);
+					WriteMethodParameterList(ref methodSig, retTypeIsLastArgType, module, token, info.TypeTokenAndNames, info.MethodTokenAndNames, "[", "]");
+				}
+				else if (ovrMeth != null && GetPropName(ovrMeth) != null) {
+					WriteFuncType(ovrMeth);
+					OutputWrite(".", TypeColor.Operator);
+					WriteIdentifier(GetPropName(ovrMeth), GetTypeColor(accMeth, TypeColor.StaticProperty, TypeColor.InstanceProperty));
+				}
+				else
+					WriteIdentifier(prop.GetName(), GetTypeColor(accMeth, TypeColor.StaticProperty, TypeColor.InstanceProperty));
+				WriteTokenComment(prop.Token);
+
+				WriteSpace();
+				OutputWrite("{", TypeColor.Operator);
+				if (getMethod != null) {
+					WriteSpace();
+					OutputWrite("get", TypeColor.Keyword);
+					OutputWrite(";", TypeColor.Operator);
+				}
+				if (setMethod != null) {
+					WriteSpace();
+					OutputWrite("set", TypeColor.Keyword);
+					OutputWrite(";", TypeColor.Operator);
+				}
+				WriteSpace();
+				OutputWrite("}", TypeColor.Operator);
+			}
+			finally {
+				recursionCounter--;
+			}
+		}
+
+		void WriteFuncType(CorFunction func) {
+			var cls = func.Class;
+			var type = cls == null ? null : cls.GetParameterizedType(CorElementType.Class);
+			if (type != null)
+				Write(type);
+			else
+				Write(cls);
+		}
+
+		static string GetPropName(CorFunction method) {
+			if (method == null)
+				return null;
+			var name = method.GetName();
+			if (name.StartsWith("get_", StringComparison.Ordinal) || name.StartsWith("set_", StringComparison.Ordinal))
+				return name.Substring(4);
+			return null;
+		}
+
+		static bool IsIndexer(CorProperty prop, CorFunction accMeth, CorFunction ovrMeth) {
+			if (prop == null || prop.GetPropertySig().GetParamCount() == 0)
+				return false;
+
+			var bp = prop;
+			if (accMeth != null && ovrMeth != null) {
+				foreach (var p in ovrMeth.Class.FindProperties(false)) {
+					if (ovrMeth.Equals(p.GetMethod) || ovrMeth.Equals(p.SetMethod)) {
+						bp = p;
+						break;
+					}
+				}
+			}
+			return GetDefaultMemberName(bp.Class) == bp.GetName();
+		}
+
+		static string GetDefaultMemberName(CorClass cls) {
+			if (cls == null)
+				return null;
+
+			//TODO:
+			return "Item";
+		}
+
+		public void Write(CorEvent evt) {
+			if (evt == null) {
+				OutputWrite("null event", TypeColor.Error);
+				return;
+			}
+
+			try {
+				if (recursionCounter++ >= MAX_RECURSION)
+					return;
+
+				Write(evt.GetEventType());
+				WriteSpace();
+				if (ShowOwnerTypes) {
+					Write(evt.Class.GetParameterizedType(CorElementType.Class));
+					OutputWrite(".", TypeColor.Operator);
+				}
+				WriteIdentifier(evt.GetName(), GetTypeColor(evt));
+				WriteTokenComment(evt.Token);
+			}
+			finally {
+				recursionCounter--;
+			}
+		}
+
+		TypeColor GetTypeColor(CorEvent e) {
+			return GetTypeColor(e.AddMethod ?? e.RemoveMethod ?? e.FireMethod, TypeColor.StaticEvent, TypeColor.InstanceEvent);
+		}
+
+		TypeColor GetTypeColor(CorFunction func, TypeColor staticValue, TypeColor instanceValue) {
+			if (func == null)
+				return instanceValue;
+			var attrs = func.GetAttributes();
+			if ((attrs & MethodAttributes.Static) != 0)
+				return staticValue;
+			return instanceValue;
+		}
+
 		public void Write(CorFunction func) {
 			Write(func, null);
 		}
@@ -802,30 +1150,60 @@ namespace dndbg.Engine {
 			Write(func, code, null);
 		}
 
+		struct GenericInfo {
+			public List<CorType> TypeGenericArguments;
+			public List<CorType> MethodGenericArguments;
+			public List<TokenAndName> TypeTokenAndNames;
+			public List<TokenAndName> MethodTokenAndNames;
+		}
+
+		GenericInfo GetGenericInfo(CorFrame frame, CorClass cls, uint methodToken) {
+			Debug.Assert(frame != null || cls != null);
+			GenericInfo info;
+			if (frame != null) {
+				frame.GetTypeAndMethodGenericParameters(out info.TypeGenericArguments, out info.MethodGenericArguments);
+				info.TypeTokenAndNames = emptyTokenAndNameList;
+				info.MethodTokenAndNames = emptyTokenAndNameList;
+			}
+			else {
+				info.MethodGenericArguments = emptyCorTypeList;
+				info.TypeGenericArguments = emptyCorTypeList;
+				var mdi = GetMetaDataImport(cls == null ? null : cls.Module);
+				var clsToken = cls == null ? 0 : cls.Token;
+				info.TypeTokenAndNames = MetaDataUtils.GetGenericParameterNames(mdi, clsToken);
+				info.MethodTokenAndNames = MetaDataUtils.GetGenericParameterNames(mdi, methodToken);
+			}
+
+			return info;
+		}
+		static readonly List<CorType> emptyCorTypeList = new List<CorType>();
+		static readonly List<TokenAndName> emptyTokenAndNameList = new List<TokenAndName>();
+
 		void Write(CorFunction func, CorCode code, CorFrame frame) {
 			try {
 				if (recursionCounter++ >= MAX_RECURSION)
 					return;
 				Debug.Assert(func != null);
 
-				var args = new List<CorValue>();
-				var typeGenArgs = new List<CorType>();
-				var methGenArgs = new List<CorType>();
-				if (frame != null) {
-					args.AddRange(frame.ILArguments);
-					frame.GetTypeAndMethodGenericParameters(out typeGenArgs, out methGenArgs);
-				}
-
-				MethodSig methodSig = null;
+				bool hasFrame = frame != null;
 				var module = func.Module;
 				uint token = func.Token;
 
+				var info = GetGenericInfo(frame, func.Class, token);
+				var args = new List<CorValue>();
+				if (hasFrame)
+					args.AddRange(frame.ILArguments);
+
+				MethodSig methodSig = null;
 				WriteModuleName(module);
-				WriteReturnType(ref methodSig, module, token, typeGenArgs, methGenArgs);
-				WriteTypeOwner(func.Class, typeGenArgs);
+				WriteReturnType(ref methodSig, false, module, token, info.TypeGenericArguments, info.MethodGenericArguments, info.TypeTokenAndNames, info.MethodTokenAndNames);
+				WriteTypeOwner(func.Class, info.TypeGenericArguments, info.TypeTokenAndNames);
 				WriteMethodName(module, token);
-				WriteGenericParameters(module, token, methGenArgs, true);
-				WriteMethodParameterList(ref methodSig, module, token, args, typeGenArgs, methGenArgs);
+				WriteGenericParameters(module, token, info.MethodGenericArguments, info.MethodTokenAndNames, true);
+				if (hasFrame)
+					WriteMethodParameterList(ref methodSig, false, module, token, args, info.TypeGenericArguments, info.MethodGenericArguments);
+				else
+					WriteMethodParameterList(ref methodSig, false, module, token, info.TypeTokenAndNames, info.MethodTokenAndNames);
 				WriteIP(frame, code);
 			}
 			finally {
@@ -903,23 +1281,23 @@ namespace dndbg.Engine {
 			return true;
 		}
 
-		bool WriteReturnType(ref MethodSig methodSig, CorModule module, uint token, IList<CorType> typeGenArgs, IList<CorType> methGenArgs) {
+		bool WriteReturnType(ref MethodSig methodSig, bool retTypeIsLastArgType, CorModule module, uint token, IList<CorType> typeGenArgs, IList<CorType> methGenArgs, List<TokenAndName> typeTokenAndNames, List<TokenAndName> methTokenAndNames) {
 			if (!ShowReturnTypes)
 				return false;
 
 			Initialize(GetMetaDataImport(module), token, ref methodSig);
-			var retType = methodSig.GetRetType();
-			Write(retType, typeGenArgs, methGenArgs);
+			var retType = retTypeIsLastArgType ? methodSig.Params.LastOrDefault() : methodSig.GetRetType();
+			Write(retType, typeGenArgs, methGenArgs, typeTokenAndNames, methTokenAndNames);
 			WriteSpace();
 			return true;
 		}
 
-		bool WriteTypeOwner(CorClass cls, IList<CorType> typeGenArgs) {
+		bool WriteTypeOwner(CorClass cls, IList<CorType> typeGenArgs, List<TokenAndName> typeTokenAndNames) {
 			if (!ShowOwnerTypes)
 				return false;
 
-			Write(cls);
-			WriteGenericParameters(cls == null ? null : cls.Module, cls == null ? 0 : cls.Token, typeGenArgs, false);
+			WriteClassOrValueType(cls);
+			WriteGenericParameters(cls == null ? null : cls.Module, cls == null ? 0 : cls.Token, typeGenArgs, typeTokenAndNames, false);
 			OutputWrite(".", TypeColor.Operator);
 			return true;
 		}
@@ -933,11 +1311,25 @@ namespace dndbg.Engine {
 				if (name == null)
 					WriteDefaultFuncName(token);
 				else
-					WriteMethodName(name, token);
+					WriteMethodName(name, token, GetTypeColor(mdi, token));
 			}
 		}
 
-		bool WriteGenericParameters(CorModule module, uint token, IList<CorType> genArgs, bool isMethod) {
+		TypeColor GetTypeColor(IMetaDataImport mdi, uint token) {
+			MethodAttributes attrs;
+			MethodImplAttributes implAttrs;
+			MDAPI.GetMethodAttributes(mdi, token, out attrs, out implAttrs);
+
+			if ((attrs & MethodAttributes.Static) != 0) {
+				if (MDAPI.HasAttribute(mdi, token, "System.Runtime.CompilerServices"))
+					return TypeColor.ExtensionMethod;
+				return TypeColor.StaticMethod;
+			}
+
+			return TypeColor.InstanceMethod;
+		}
+
+		bool WriteGenericParameters(CorModule module, uint token, IList<CorType> genArgs, List<TokenAndName> typeTokenAndNames, bool isMethod) {
 			var mdi = GetMetaDataImport(module);
 			var gps = MetaDataUtils.GetGenericParameterNames(mdi, token);
 			if (gps.Count == 0)
@@ -949,6 +1341,8 @@ namespace dndbg.Engine {
 					WriteCommaSpace();
 				if (i < genArgs.Count)
 					Write(genArgs[i]);
+				else if (i < typeTokenAndNames.Count)
+					Write(typeTokenAndNames[i], i, token);
 				else {
 					var gp = gps[i];
 					WriteGenericParameterName(gp.Name, gp.Token, isMethod);
@@ -958,24 +1352,39 @@ namespace dndbg.Engine {
 			return true;
 		}
 
+		void Write(TokenAndName info, int index, uint ownerToken) {
+			Write(info, index, (ownerToken >> 24) == 2);
+		}
+
+		void Write(TokenAndName info, int index, bool isType) {
+			Debug.Assert(info.Name != null);
+			string name = info.Name;
+			if (string.IsNullOrEmpty(name))
+				name = string.Format("_T{0}_", index);
+			OutputWrite(name, isType ? TypeColor.TypeGenericParameter : TypeColor.MethodGenericParameter);
+		}
+
 		void Initialize(IMetaDataImport mdi, uint token, ref MethodSig methodSig) {
 			if (mdi == null || methodSig != null)
 				return;
 			methodSig = MetaDataUtils.GetMethodSignature(mdi, token);
 		}
 
-		void WriteMethodParameterList(ref MethodSig methodSig, CorModule module, uint token, IList<CorValue> args, IList<CorType> typeGenArgs, IList<CorType> methGenArgs) {
+		void WriteMethodParameterList(ref MethodSig methodSig, bool retTypeIsLastArgType, CorModule module, uint token, IList<CorValue> args, IList<CorType> typeGenArgs, IList<CorType> methGenArgs, string leftParen = "(", string rightParen = ")") {
 			if (!ShowParameterTypes && !ShowParameterNames && !ShowParameterValues)
 				return;
 
 			var mdi = GetMetaDataImport(module);
 			var ps = MetaDataUtils.GetParameters(mdi, token);
 
-			OutputWrite("(", TypeColor.Operator);
+			OutputWrite(leftParen, TypeColor.Operator);
 			Initialize(mdi, token, ref methodSig);
 			Debug.Assert(methodSig != null);
 			Debug.Assert(methodSig == null || methodSig.GenParamCount == methGenArgs.Count);
-			for (int i = methodSig == null ? 0 : methodSig.HasThis ? 1 : 0, mi = 0; i < args.Count; i++, mi++) {
+			int argsCount = args.Count;
+			if (retTypeIsLastArgType)
+				argsCount--;
+			for (int i = methodSig == null ? 0 : methodSig.HasThis ? 1 : 0, mi = 0; i < argsCount; i++, mi++) {
 				if (mi > 0)
 					WriteCommaSpace();
 				var arg = args[i];
@@ -992,7 +1401,7 @@ namespace dndbg.Engine {
 							WriteSpace();
 							ma = ma.RemovePinnedAndModifiers().GetNext();
 						}
-						Write(ma, typeGenArgs, methGenArgs);
+						Write(ma, typeGenArgs, methGenArgs, emptyTokenAndNameList, emptyTokenAndNameList);
 					}
 					else {
 						var type = arg.ExactType;
@@ -1035,7 +1444,82 @@ namespace dndbg.Engine {
 					needSpace = true;
 				}
 			}
-			OutputWrite(")", TypeColor.Operator);
+			OutputWrite(rightParen, TypeColor.Operator);
+		}
+
+		void WriteMethodParameterList(ref MethodSig methodSig, bool retTypeIsLastArgType, CorModule module, uint token, List<TokenAndName> typeTokenAndNames, List<TokenAndName> methTokenAndNames, string leftParen = "(", string rightParen = ")") {
+			if (!ShowParameterTypes && !ShowParameterNames)
+				return;
+
+			var mdi = GetMetaDataImport(module);
+			var ps = MetaDataUtils.GetParameters(mdi, token);
+
+			OutputWrite(leftParen, TypeColor.Operator);
+			Initialize(mdi, token, ref methodSig);
+			Debug.Assert(methodSig != null);
+			var sigParams = methodSig == null ? (IList<TypeSig>)new TypeSig[0] : methodSig.Params;
+			int paramsCount = sigParams.Count;
+			if (retTypeIsLastArgType)
+				paramsCount--;
+			for (int i = 0; i < paramsCount; i++) {
+				if (i > 0)
+					WriteCommaSpace();
+
+				var ma = sigParams[i];
+				var paramInfo = ps.Get((uint)i + 1);
+				bool isCSharpOut = paramInfo != null && !paramInfo.Value.IsIn && paramInfo.Value.IsOut;
+
+				bool needSpace = false;
+				if (ShowParameterTypes) {
+					needSpace = true;
+
+					if (paramInfo != null && MDAPI.HasAttribute(mdi, paramInfo.Value.Token, "System.ParamArrayAttribute")) {
+						OutputWrite("params", TypeColor.Keyword);
+						WriteSpace();
+					}
+
+					if (ma.RemovePinnedAndModifiers().GetElementType() == ElementType.ByRef) {
+						OutputWrite(isCSharpOut ? "out" : "ref", TypeColor.Keyword);
+						WriteSpace();
+						ma = ma.RemovePinnedAndModifiers().GetNext();
+					}
+					Write(ma, null, null, typeTokenAndNames, methTokenAndNames);
+				}
+
+				if (ShowParameterNames) {
+					if (needSpace)
+						WriteSpace();
+					needSpace = true;
+
+					WriteIdentifier(paramInfo == null ? string.Format("A_{0}", i) : paramInfo.Value.Name, TypeColor.Parameter);
+				}
+
+				if (ShowParameterLiteralValues && paramInfo != null) {
+					CorElementType etype;
+					var c = MDAPI.GetParamConstant(mdi, paramInfo.Value.Token, out etype);
+					if (etype != CorElementType.End) {
+						if (needSpace) {
+							WriteSpace();
+							OutputWrite("=", TypeColor.Operator);
+							WriteSpace();
+						}
+						needSpace = true;
+
+						var t = ma.RemovePinnedAndModifiers();
+						if (t.GetElementType() == ElementType.ByRef)
+							t = t.Next;
+						if (c == null && t != null && t.IsValueType) {
+							OutputWrite("default", TypeColor.Keyword);
+							OutputWrite("(", TypeColor.Operator);
+							Write(t, null, null, typeTokenAndNames, methTokenAndNames);
+							OutputWrite(")", TypeColor.Operator);
+						}
+						else
+							WriteConstant(c);
+					}
+				}
+			}
+			OutputWrite(rightParen, TypeColor.Operator);
 		}
 
 		void WriteGenericParameterName(string name, uint token, bool isMethod) {
@@ -1044,11 +1528,11 @@ namespace dndbg.Engine {
 		}
 
 		void WriteDefaultFuncName(uint token) {
-			WriteMethodName(string.Format("meth_{0:X8}", token), token);
+			WriteMethodName(string.Format("meth_{0:X8}", token), token, TypeColor.InstanceMethod);
 		}
 
-		void WriteMethodName(string name, uint token) {
-			WriteIdentifier(name, TypeColor.Method);
+		void WriteMethodName(string name, uint token, TypeColor typeColor) {
+			WriteIdentifier(name, typeColor);
 			WriteTokenComment(token);
 		}
 
@@ -1196,7 +1680,7 @@ namespace dndbg.Engine {
 					return;
 				}
 
-				WriteToStringData(value, info, func);
+				WriteToStringData(value, func);
 			}
 		}
 
@@ -1218,7 +1702,7 @@ namespace dndbg.Engine {
 			return et.GetSystemObjectToStringMethod();
 		}
 
-		void WriteToStringData(CorValue value, CorMethodInfo info, CorFunction func) {
+		void WriteToStringData(CorValue value, CorFunction func) {
 			Debug.Assert(value != null && func != null && getEval != null);
 
 			try {

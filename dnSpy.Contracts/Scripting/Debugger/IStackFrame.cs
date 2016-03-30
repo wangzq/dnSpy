@@ -18,6 +18,8 @@
 */
 
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using dnSpy.Contracts.Highlighting;
 
 namespace dnSpy.Contracts.Scripting.Debugger {
@@ -98,7 +100,7 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		uint NativeOffset { get; set; }
 
 		/// <summary>
-		/// Gets the internal frame type or <see cref="InternalFrameType.None"/>
+		/// Gets the internal frame type or <see cref="Debugger.InternalFrameType.None"/>
 		/// if it's not an internal frame
 		/// </summary>
 		InternalFrameType InternalFrameType { get; }
@@ -109,9 +111,9 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		int Index { get; }
 
 		/// <summary>
-		/// Gets the function or null
+		/// Gets the method or null
 		/// </summary>
-		IDebuggerFunction Function { get; }
+		IDebuggerMethod Method { get; }
 
 		/// <summary>
 		/// Gets the IL code or null
@@ -126,12 +128,12 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		/// <summary>
 		/// Gets all arguments
 		/// </summary>
-		IDebuggerValue[] ILArguments { get; }
+		IDebuggerValue[] Arguments { get; }
 
 		/// <summary>
 		/// Gets all locals
 		/// </summary>
-		IDebuggerValue[] ILLocals { get; }
+		IDebuggerValue[] Locals { get; }
 
 		/// <summary>
 		/// Gets all generic type and/or method arguments. The first returned values are the generic
@@ -156,34 +158,34 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		/// </summary>
 		/// <param name="index">Index of local</param>
 		/// <returns></returns>
-		IDebuggerValue GetILLocal(uint index);
+		IDebuggerValue GetLocal(uint index);
 
 		/// <summary>
 		/// Gets a local variable or null if <see cref="IsILFrame"/> is false
 		/// </summary>
 		/// <param name="index">Index of local</param>
 		/// <returns></returns>
-		IDebuggerValue GetILLocal(int index);
+		IDebuggerValue GetLocal(int index);
 
 		/// <summary>
 		/// Gets an argument or null if <see cref="IsILFrame"/> is false
 		/// </summary>
 		/// <param name="index">Index of argument</param>
 		/// <returns></returns>
-		IDebuggerValue GetILArgument(uint index);
+		IDebuggerValue GetArgument(uint index);
 
 		/// <summary>
 		/// Gets an argument or null if <see cref="IsILFrame"/> is false
 		/// </summary>
 		/// <param name="index">Index of argument</param>
 		/// <returns></returns>
-		IDebuggerValue GetILArgument(int index);
+		IDebuggerValue GetArgument(int index);
 
 		/// <summary>
 		/// Gets all locals
 		/// </summary>
 		/// <param name="kind">Kind</param>
-		IDebuggerValue[] GetILLocals(ILCodeKind kind);
+		IDebuggerValue[] GetLocals(ILCodeKind kind);
 
 		/// <summary>
 		/// Gets a local variable or null
@@ -191,7 +193,7 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		/// <param name="kind">Kind</param>
 		/// <param name="index">Index of local</param>
 		/// <returns></returns>
-		IDebuggerValue GetILLocal(ILCodeKind kind, uint index);
+		IDebuggerValue GetLocal(ILCodeKind kind, uint index);
 
 		/// <summary>
 		/// Gets a local variable or null
@@ -199,7 +201,7 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		/// <param name="kind">Kind</param>
 		/// <param name="index">Index of local</param>
 		/// <returns></returns>
-		IDebuggerValue GetILLocal(ILCodeKind kind, int index);
+		IDebuggerValue GetLocal(ILCodeKind kind, int index);
 
 		/// <summary>
 		/// Gets the code or null
@@ -222,9 +224,59 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		void StepInto();
 
 		/// <summary>
+		/// Step into the method and call <see cref="IDebugger.WaitAsync(int)"/>
+		/// </summary>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		Task<bool> StepIntoAsync(int millisecondsTimeout = Timeout.Infinite);
+
+		/// <summary>
+		/// Step into the method and call <see cref="IDebugger.Wait(int)"/>
+		/// </summary>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		bool StepIntoWait(int millisecondsTimeout = Timeout.Infinite);
+
+		/// <summary>
+		/// Step into the method and call <see cref="IDebugger.Wait(CancellationToken, int)"/>
+		/// </summary>
+		/// <param name="token">Cancellation token</param>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		bool StepIntoWait(CancellationToken token, int millisecondsTimeout = Timeout.Infinite);
+
+		/// <summary>
 		/// Step over the method
 		/// </summary>
 		void StepOver();
+
+		/// <summary>
+		/// Step over the method and call <see cref="IDebugger.WaitAsync(int)"/>
+		/// </summary>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		Task<bool> StepOverAsync(int millisecondsTimeout = Timeout.Infinite);
+
+		/// <summary>
+		/// Step over the method and call <see cref="IDebugger.Wait(int)"/>
+		/// </summary>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		bool StepOverWait(int millisecondsTimeout = Timeout.Infinite);
+
+		/// <summary>
+		/// Step over the method and call <see cref="IDebugger.Wait(CancellationToken, int)"/>
+		/// </summary>
+		/// <param name="token">Cancellation token</param>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		bool StepOverWait(CancellationToken token, int millisecondsTimeout = Timeout.Infinite);
 
 		/// <summary>
 		/// Step out of the method
@@ -232,10 +284,60 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		void StepOut();
 
 		/// <summary>
+		/// Step out of the method and call <see cref="IDebugger.WaitAsync(int)"/>
+		/// </summary>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		Task<bool> StepOutAsync(int millisecondsTimeout = Timeout.Infinite);
+
+		/// <summary>
+		/// Step out of the method and call <see cref="IDebugger.Wait(int)"/>
+		/// </summary>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		bool StepOutWait(int millisecondsTimeout = Timeout.Infinite);
+
+		/// <summary>
+		/// Step out of the method and call <see cref="IDebugger.Wait(CancellationToken, int)"/>
+		/// </summary>
+		/// <param name="token">Cancellation token</param>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		bool StepOutWait(CancellationToken token, int millisecondsTimeout = Timeout.Infinite);
+
+		/// <summary>
 		/// Let the program execute until it returns to this frame
 		/// </summary>
 		/// <returns></returns>
 		bool RunTo();
+
+		/// <summary>
+		/// Let the program execute until it returns to this frame and call <see cref="IDebugger.WaitAsync(int)"/>
+		/// </summary>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		Task<bool> RunToAsync(int millisecondsTimeout = Timeout.Infinite);
+
+		/// <summary>
+		/// Let the program execute until it returns to this frame and call <see cref="IDebugger.Wait(int)"/>
+		/// </summary>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		bool RunToWait(int millisecondsTimeout = Timeout.Infinite);
+
+		/// <summary>
+		/// Let the program execute until it returns to this frame and call <see cref="IDebugger.Wait(CancellationToken, int)"/>
+		/// </summary>
+		/// <param name="token">Cancellation token</param>
+		/// <param name="millisecondsTimeout">Millisecs to wait or -1 (<see cref="Timeout.Infinite"/>)
+		/// to wait indefinitely</param>
+		/// <returns></returns>
+		bool RunToWait(CancellationToken token, int millisecondsTimeout = Timeout.Infinite);
 
 		/// <summary>
 		/// Set next instruction to execute. All <see cref="IStackFrame"/> and <see cref="IDebuggerValue"/>
@@ -268,6 +370,55 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		/// <param name="offset">New offset within the current method</param>
 		/// <returns></returns>
 		bool SetNativeOffset(uint offset);
+
+		/// <summary>
+		/// Reads a static field
+		/// </summary>
+		/// <param name="field">Field</param>
+		/// <returns></returns>
+		IDebuggerValue ReadStaticField(IDebuggerField field);
+
+		/// <summary>
+		/// Reads a static field
+		/// </summary>
+		/// <param name="cls">Class</param>
+		/// <param name="token">Field token</param>
+		/// <returns></returns>
+		IDebuggerValue ReadStaticField(IDebuggerClass cls, uint token);
+
+		/// <summary>
+		/// Reads a static field
+		/// </summary>
+		/// <param name="type">Type</param>
+		/// <param name="token">Field token</param>
+		/// <returns></returns>
+		IDebuggerValue ReadStaticField(IDebuggerType type, uint token);
+
+		/// <summary>
+		/// Reads a static field
+		/// </summary>
+		/// <param name="cls">Class</param>
+		/// <param name="name">Field name</param>
+		/// <param name="checkBaseClasses">true to check base classes</param>
+		/// <returns></returns>
+		IDebuggerValue ReadStaticField(IDebuggerClass cls, string name, bool checkBaseClasses = true);
+
+		/// <summary>
+		/// Reads a static field
+		/// </summary>
+		/// <param name="type">Type</param>
+		/// <param name="name">Field name</param>
+		/// <param name="checkBaseClasses">true to check base classes</param>
+		/// <returns></returns>
+		IDebuggerValue ReadStaticField(IDebuggerType type, string name, bool checkBaseClasses = true);
+
+		/// <summary>
+		/// Reads a static field
+		/// </summary>
+		/// <param name="type">Declaring type</param>
+		/// <param name="field">Field</param>
+		/// <returns></returns>
+		IDebuggerValue ReadStaticField(IDebuggerType type, IDebuggerField field);
 
 		/// <summary>
 		/// Write this to <paramref name="output"/>

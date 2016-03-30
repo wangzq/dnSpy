@@ -42,20 +42,26 @@ namespace dnSpy.Contracts.Scripting.Debugger {
 		ulong Address { get; }
 
 		/// <summary>
-		/// Gets the EnC (edit and continue) version number of this function
+		/// Gets the EnC (edit and continue) version number of this method
 		/// </summary>
 		uint VersionNumber { get; }
 
 		/// <summary>
-		/// Gets the function
+		/// Gets the method
 		/// </summary>
-		IDebuggerFunction Function { get; }
+		IDebuggerMethod Method { get; }
 
 		/// <summary>
 		/// Gets all code chunks if <see cref="IsIL"/> is <c>false</c>
 		/// </summary>
 		/// <returns></returns>
 		CodeChunkInfo[] GetCodeChunks();
+
+		/// <summary>
+		/// Reads the (IL or native) code at <see cref="Address"/>
+		/// </summary>
+		/// <returns></returns>
+		byte[] ReadCode();
 
 		/// <summary>
 		/// Creates an IL code breakpoint that's only valid for the current debugging session. The

@@ -18,7 +18,6 @@
 */
 
 using System;
-using System.ComponentModel.Composition;
 using System.Windows.Input;
 using dnSpy.Contracts.Menus;
 using dnSpy.Contracts.TextEditor;
@@ -36,9 +35,7 @@ namespace dnSpy.Scripting.Roslyn.Common {
 	}
 
 	abstract class ReplEditorCtxMenuCommand : MenuItemBase<ReplEditorCtxMenuContext> {
-		protected sealed override object CachedContextKey {
-			get { return ContextKey; }
-		}
+		protected sealed override object CachedContextKey => ContextKey;
 		static readonly object ContextKey = new object();
 
 		protected sealed override ReplEditorCtxMenuContext CreateContext(IMenuItemContext context) {
@@ -57,14 +54,11 @@ namespace dnSpy.Scripting.Roslyn.Common {
 	}
 
 	abstract class ReplEditorCtxMenuCommand2 : MenuItemCommand<ReplEditorCtxMenuContext> {
-		protected sealed override object CachedContextKey {
-			get { return ContextKey; }
-		}
+		protected sealed override object CachedContextKey => ContextKey;
 		static readonly object ContextKey = new object();
 
-		protected sealed override ReplEditorCtxMenuContext CreateContext(IMenuItemContext context) {
-			return ReplEditorCtxMenuCommand.CreateContextInternal(context);
-		}
+		protected sealed override ReplEditorCtxMenuContext CreateContext(IMenuItemContext context) =>
+			ReplEditorCtxMenuCommand.CreateContextInternal(context);
 
 		protected ReplEditorCtxMenuCommand2(ICommand realCommand)
 			: base(realCommand) {
@@ -73,13 +67,8 @@ namespace dnSpy.Scripting.Roslyn.Common {
 
 	[ExportMenuItem(Header = "res:Script_ToolTip_Reset", Icon = "Reset", Group = MenuConstants.GROUP_CTX_REPL_RESET, Order = 0)]
 	sealed class ResetReplEditorCtxMenuCommand : ReplEditorCtxMenuCommand {
-		public override void Execute(ReplEditorCtxMenuContext context) {
-			context.VM.Reset();
-		}
-
-		public override bool IsEnabled(ReplEditorCtxMenuContext context) {
-			return context.VM.CanReset;
-		}
+		public override void Execute(ReplEditorCtxMenuContext context) => context.VM.Reset();
+		public override bool IsEnabled(ReplEditorCtxMenuContext context) => context.VM.CanReset;
 	}
 
 	[ExportMenuItem(Header = "res:CutCommand", Icon = "Cut", InputGestureText = "res:ShortCutKeyCtrlX", Group = MenuConstants.GROUP_CTX_REPL_COPY, Order = 0)]
@@ -105,12 +94,7 @@ namespace dnSpy.Scripting.Roslyn.Common {
 
 	[ExportMenuItem(Header = "res:ClearScreenCommand", Icon = "ClearWindowContent", InputGestureText = "res:ShortCutKeyCtrlL", Group = MenuConstants.GROUP_CTX_REPL_CLEAR, Order = 0)]
 	sealed class ClearReplEditorCtxMenuCommand : ReplEditorCtxMenuCommand {
-		public override void Execute(ReplEditorCtxMenuContext context) {
-			context.UI.Clear();
-		}
-
-		public override bool IsEnabled(ReplEditorCtxMenuContext context) {
-			return context.UI.CanClear;
-		}
+		public override void Execute(ReplEditorCtxMenuContext context) => context.UI.Clear();
+		public override bool IsEnabled(ReplEditorCtxMenuContext context) => context.UI.CanClear;
 	}
 }

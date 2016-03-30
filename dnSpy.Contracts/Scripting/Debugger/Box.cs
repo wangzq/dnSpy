@@ -17,16 +17,22 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System.Threading;
-
-namespace dnSpy.Contracts.Languages {
+namespace dnSpy.Contracts.Scripting.Debugger {
 	/// <summary>
-	/// Decompilation context
+	/// Boxed value
 	/// </summary>
-	public interface IDecompilationContext {
+	public sealed class Box {
 		/// <summary>
-		/// Gets the cancellation token
+		/// Get the value
 		/// </summary>
-		CancellationToken CancellationToken { get; }
+		public object Value { get; private set; }
+
+		/// <summary>
+		/// Constructor
+		/// </summary>
+		/// <param name="value">Value</param>
+		public Box(object value) {
+			this.Value = value;
+		}
 	}
 }

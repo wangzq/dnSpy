@@ -19,6 +19,8 @@
 
 using System;
 using System.Diagnostics;
+using System.IO;
+using System.Reflection;
 using dnSpy.Contracts.Scripting.Debugger;
 
 using DBG = dndbg.Engine;
@@ -75,7 +77,7 @@ namespace dnSpy.Debugger.Scripting {
 			return o;
 		}
 
-		public static DBG.CorType[] ToCorType(this IDebuggerType[] types) {
+		public static DBG.CorType[] ToCorTypes(this IDebuggerType[] types) {
 			if (types == null)
 				return null;
 			var ctypes = new DBG.CorType[types.Length];
@@ -84,6 +86,17 @@ namespace dnSpy.Debugger.Scripting {
 				ctypes[i] = t.CorType;
 			}
 			return ctypes;
+		}
+
+		public static DBG.CorValue[] ToCorValues(this IDebuggerValue[] values) {
+			if (values == null)
+				return null;
+			var cvalues = new DBG.CorValue[values.Length];
+			for (int i = 0; i < values.Length; i++) {
+				var v = (DebuggerValue)values[i];
+				cvalues[i] = v.CorValue;
+			}
+			return cvalues;
 		}
 
 		public static DBG.SerializedDnModule ToSerializedDnModule(this ModuleName moduleName) {
@@ -204,6 +217,105 @@ namespace dnSpy.Debugger.Scripting {
 
 		public static DBG.CorValueResult ToCorValueResult(this ValueResult value) {
 			return value.IsValid ? new DBG.CorValueResult(value.Value) : new DBG.CorValueResult();
+		}
+
+		public static bool IsSameFile(string filename, string nameToMatch) {
+			if (StringComparer.OrdinalIgnoreCase.Equals(filename, nameToMatch))
+				return true;
+			if (StringComparer.OrdinalIgnoreCase.Equals(Path.GetFileName(filename), nameToMatch))
+				return true;
+			if (StringComparer.OrdinalIgnoreCase.Equals(Path.GetFileNameWithoutExtension(filename), nameToMatch))
+				return true;
+
+			return false;
+		}
+
+		public static IDebuggerValue ToDebuggerValue(this DBG.EvalResult res, Debugger debugger) {
+			if (res.ResultOrException == null)
+				throw new InvalidOperationException("Result of evaluation was a null CorValue");
+			return new DebuggerValue(debugger, res.ResultOrException);
+		}
+
+		public static decimal ToDecimal(byte[] data) {
+			if (data == null || data.Length != 16)
+				return decimal.Zero;
+
+			var decimalBits = new int[4];
+			decimalBits[3] = BitConverter.ToInt32(data, 0);
+			decimalBits[2] = BitConverter.ToInt32(data, 4);
+			decimalBits[0] = BitConverter.ToInt32(data, 8);
+			decimalBits[1] = BitConverter.ToInt32(data, 12);
+			try {
+				return new decimal(decimalBits);
+			}
+			catch (ArgumentException) {
+			}
+			return decimal.Zero;
+		}
+
+		public static byte[] GetBytes(decimal d) {
+			var decimalBits = decimal.GetBits(d);
+			var bytes = new byte[16];
+			WriteInt32(bytes, 0, decimalBits[3]);
+			WriteInt32(bytes, 4, decimalBits[2]);
+			WriteInt32(bytes, 8, decimalBits[0]);
+			WriteInt32(bytes, 12, decimalBits[1]);
+			return bytes;
+		}
+
+		static void WriteInt32(byte[] dest, int index, int v) {
+			dest[index + 0] = (byte)v;
+			dest[index + 1] = (byte)(v >> 8);
+			dest[index + 2] = (byte)(v >> 16);
+			dest[index + 3] = (byte)(v >> 24);
+		}
+
+		public static DebuggerPauseState Convert(DBG.DebuggerPauseState ps) {
+			switch (ps.Reason) {
+			case DBG.DebuggerPauseReason.Other:
+				return new DebuggerPauseState(PauseReason.Other);
+
+			case DBG.DebuggerPauseReason.UnhandledException:
+				return new DebuggerPauseState(PauseReason.UnhandledException);
+
+			case DBG.DebuggerPauseReason.Exception:
+				return new DebuggerPauseState(PauseReason.Exception);
+
+			case DBG.DebuggerPauseReason.DebugEventBreakpoint:
+				var deb = (DBG.DebugEventBreakpointPauseState)ps;
+				return new EventBreakpointPauseState(deb.Breakpoint.Tag as IEventBreakpoint ?? NullEventBreakpoint.Instance);
+
+			case DBG.DebuggerPauseReason.AnyDebugEventBreakpoint:
+				var adeb = (DBG.AnyDebugEventBreakpointPauseState)ps;
+				return new AnyEventBreakpointPauseState(adeb.Breakpoint.Tag as IAnyEventBreakpoint ?? NullAnyEventBreakpoint.Instance);
+
+			case DBG.DebuggerPauseReason.Break:
+				return new DebuggerPauseState(PauseReason.Break);
+
+			case DBG.DebuggerPauseReason.ILCodeBreakpoint:
+				var ilbp = (DBG.ILCodeBreakpointPauseState)ps;
+				return new ILBreakpointPauseState(ilbp.Breakpoint.Tag as IILBreakpoint ?? NullILBreakpoint.Instance);
+
+			case DBG.DebuggerPauseReason.NativeCodeBreakpoint:
+				var nbp = (DBG.NativeCodeBreakpointPauseState)ps;
+				return new NativeBreakpointPauseState(nbp.Breakpoint.Tag as INativeBreakpoint ?? NullNativeBreakpoint.Instance);
+
+			case DBG.DebuggerPauseReason.Step:
+				return new StepPauseState((DebugStepReason)((DBG.StepPauseState)ps).StepReason);
+
+			case DBG.DebuggerPauseReason.UserBreak:
+				return new DebuggerPauseState(PauseReason.UserBreak);
+
+			case DBG.DebuggerPauseReason.Eval:
+				return new DebuggerPauseState(PauseReason.Eval);
+
+			default:
+				return new DebuggerPauseState(PauseReason.Other);
+			}
+		}
+
+		public static bool IsMethodSpec(this MethodBase mb) {
+			return mb != null && !mb.IsGenericMethodDefinition && mb.IsGenericMethod;
 		}
 	}
 }

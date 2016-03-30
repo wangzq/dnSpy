@@ -48,30 +48,15 @@ namespace dnSpy.Scripting.Roslyn.Common {
 	abstract class ScriptControlVM : ViewModelBase, IReplCommandHandler, IScriptGlobalsHelper {
 		internal const string CMD_PREFIX = "#";
 
-		public ICommand ResetCommand {
-			get { return new RelayCommand(a => Reset(), a => CanReset); }
-		}
-
-		public ICommand ClearCommand {
-			get { return new RelayCommand(a => replEditor.Clear(), a => replEditor.CanClear); }
-		}
-
-		public ICommand HistoryPreviousCommand {
-			get { return new RelayCommand(a => replEditor.SelectPreviousCommand(), a => replEditor.CanSelectPreviousCommand); }
-		}
-
-		public ICommand HistoryNextCommand {
-			get { return new RelayCommand(a => replEditor.SelectNextCommand(), a => replEditor.CanSelectNextCommand); }
-		}
-
-		public object ResetImageObject { get { return this; } }
-		public object ClearWindowContentImageObject { get { return this; } }
-		public object HistoryPreviousImageObject { get { return this; } }
-		public object HistoryNextImageObject { get { return this; } }
-
-		public bool CanReset {
-			get { return hasInitialized && (execState == null || !execState.IsInitializing); }
-		}
+		public ICommand ResetCommand => new RelayCommand(a => Reset(), a => CanReset);
+		public ICommand ClearCommand => new RelayCommand(a => replEditor.Clear(), a => replEditor.CanClear);
+		public ICommand HistoryPreviousCommand => new RelayCommand(a => replEditor.SelectPreviousCommand(), a => replEditor.CanSelectPreviousCommand);
+		public ICommand HistoryNextCommand => new RelayCommand(a => replEditor.SelectNextCommand(), a => replEditor.CanSelectNextCommand);
+		public object ResetImageObject => this;
+		public object ClearWindowContentImageObject => this;
+		public object HistoryPreviousImageObject => this;
+		public object HistoryNextImageObject => this;
+		public bool CanReset => hasInitialized && (execState == null || !execState.IsInitializing);
 
 		public void Reset(bool loadConfig = true) {
 			if (!CanReset)
@@ -91,14 +76,10 @@ namespace dnSpy.Scripting.Roslyn.Common {
 			InitializeExecutionEngine(loadConfig, false);
 		}
 
-		public IReplEditor ReplEditor {
-			get { return replEditor; }
-		}
+		public IReplEditor ReplEditor => replEditor;
 		protected readonly IReplEditor replEditor;
 
-		public IEnumerable<IScriptCommand> ScriptCommands {
-			get { return toScriptCommand.Values; }
-		}
+		public IEnumerable<IScriptCommand> ScriptCommands => toScriptCommand.Values;
 		readonly Dictionary<string, IScriptCommand> toScriptCommand;
 
 		IEnumerable<IScriptCommand> CreateScriptCommands() {
@@ -159,33 +140,49 @@ namespace dnSpy.Scripting.Roslyn.Common {
 			public Task<ScriptState<object>> ExecTask;
 			public bool Executing;
 			public bool IsInitializing;
-			public ExecState(ScriptControlVM vm, CancellationTokenSource cts) {
+			public ExecState(ScriptControlVM vm, Dispatcher dispatcher, CancellationTokenSource cts) {
 				this.CancellationTokenSource = cts;
-				this.Globals = new ScriptGlobals(vm, cts.Token);
+				this.Globals = new ScriptGlobals(vm, dispatcher, cts.Token);
 				this.IsInitializing = true;
 			}
 		}
 		ExecState execState;
 		readonly object lockObj = new object();
 
+		IEnumerable<string> GetDefaultScriptFilePaths() {
+			const string SCRIPTS_DIR = "scripts";
+			var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+			Debug.Assert(Directory.Exists(userProfile));
+			if (Directory.Exists(userProfile)) {
+				yield return Path.Combine(userProfile, SCRIPTS_DIR);
+				yield return userProfile;
+			}
+			yield return Path.Combine(AppDirectories.DataDirectory, SCRIPTS_DIR);
+			yield return Path.Combine(AppDirectories.BinDirectory, SCRIPTS_DIR);
+		}
+
+		IEnumerable<string> GetDefaultLibPaths() {
+			return GetDefaultScriptFilePaths();
+		}
+
+		IEnumerable<string> GetDefaultLoadPaths() {
+			return GetDefaultScriptFilePaths();
+		}
+
 		void InitializeExecutionEngine(bool loadConfig, bool showHelp) {
 			Debug.Assert(execState == null);
 			if (execState != null)
 				throw new InvalidOperationException();
 
-			execState = new ExecState(this, new CancellationTokenSource());
+			execState = new ExecState(this, dispatcher, new CancellationTokenSource());
 			var execStateCache = execState;
-			Task.Factory.StartNew(() => {
-				AppCulture.InitializeCulture();
+			Task.Run(() => {
 				execStateCache.CancellationTokenSource.Token.ThrowIfCancellationRequested();
 
 				var userOpts = new UserScriptOptions();
 				if (loadConfig) {
-					string userProfileDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-					if (!string.IsNullOrEmpty(userProfileDir)) {
-						userOpts.LibPaths.Add(userProfileDir);
-						userOpts.LoadPaths.Add(userProfileDir);
-					}
+					userOpts.LibPaths.AddRange(GetDefaultLibPaths());
+					userOpts.LoadPaths.AddRange(GetDefaultLoadPaths());
 					InitializeUserScriptOptions(userOpts);
 				}
 				var opts = ScriptOptions.Default;
@@ -256,8 +253,7 @@ namespace dnSpy.Scripting.Roslyn.Common {
 				var oldState = execState;
 
 				var taskSched = TaskScheduler.FromCurrentSynchronizationContext();
-				Task.Factory.StartNew(() => {
-					AppCulture.InitializeCulture();
+				Task.Run(() => {
 					oldState.CancellationTokenSource.Token.ThrowIfCancellationRequested();
 
 					var opts = oldState.ScriptOptions.WithReferences(Array.Empty<MetadataReference>()).WithImports(Array.Empty<string>());
@@ -386,19 +382,14 @@ namespace dnSpy.Scripting.Roslyn.Common {
 
 		protected abstract ObjectFormatter ObjectFormatter { get; }
 		protected abstract DiagnosticFormatter DiagnosticFormatter { get; }
-
-		string Format(object value) {
-			return ObjectFormatter.FormatObject(value);
-		}
+		string Format(object value) => ObjectFormatter.FormatObject(value);
 
 		/// <summary>
 		/// Returns true if it's the current script
 		/// </summary>
 		/// <param name="globals">Globals</param>
 		/// <returns></returns>
-		bool IsCurrentScript(ScriptGlobals globals) {
-			return execState?.Globals == globals;
-		}
+		bool IsCurrentScript(ScriptGlobals globals) => execState?.Globals == globals;
 
 		void IScriptGlobalsHelper.Print(ScriptGlobals globals, string text) {
 			if (!IsCurrentScript(globals))
@@ -424,9 +415,7 @@ namespace dnSpy.Scripting.Roslyn.Common {
 			replEditor.OutputPrintLine(Format(value));
 		}
 
-		IServiceLocator IScriptGlobalsHelper.ServiceLocator {
-			get { return serviceLocator; }
-		}
+		IServiceLocator IScriptGlobalsHelper.ServiceLocator => serviceLocator;
 		readonly IServiceLocator serviceLocator;
 
 		protected static string GetResponseFile(string filename) {

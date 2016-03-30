@@ -24,13 +24,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using dnSpy.Contracts.App;
 using dnSpy.Contracts.Controls;
 using dnSpy.Contracts.Files.Tabs;
 using dnSpy.Contracts.Files.TreeView;
 using dnSpy.Contracts.Settings;
 using dnSpy.Contracts.Tabs;
 using dnSpy.Shared.MVVM;
+using dnSpy.Tabs;
 
 namespace dnSpy.Files.Tabs {
 	sealed class TabContentImpl : ViewModelBase, ITabContent, IFileTab, IFocusable {
@@ -268,10 +268,7 @@ namespace dnSpy.Files.Tabs {
 					asyncShow = true;
 					var ctx = new AsyncWorkerContext();
 					asyncWorkerContext = ctx;
-					Task.Factory.StartNew(() => {
-						AppCulture.InitializeCulture();
-						asyncTabContent.AsyncWorker(showCtx, ctx.CancellationTokenSource);
-					}, ctx.CancellationTokenSource.Token)
+					Task.Factory.StartNew(() => asyncTabContent.AsyncWorker(showCtx, ctx.CancellationTokenSource), ctx.CancellationTokenSource.Token)
 					.ContinueWith(t => {
 						bool canShowAsyncOutput = ctx == asyncWorkerContext &&
 												cachedUIContext.FileTab == this &&
@@ -315,10 +312,7 @@ namespace dnSpy.Files.Tabs {
 			var ctx = new AsyncWorkerContext();
 			asyncWorkerContext = ctx;
 			preExec(ctx.CancellationTokenSource);
-			Task.Factory.StartNew(() => {
-				AppCulture.InitializeCulture();
-				asyncAction();
-			}, ctx.CancellationTokenSource.Token)
+			Task.Factory.StartNew(() => asyncAction(), ctx.CancellationTokenSource.Token)
 			.ContinueWith(t => {
 				if (asyncWorkerContext == ctx)
 					asyncWorkerContext = null;

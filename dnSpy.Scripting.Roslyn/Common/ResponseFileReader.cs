@@ -41,7 +41,12 @@ namespace dnSpy.Scripting.Roslyn.Common {
 					arg1 = cmd.Substring(index + 1);
 					cmd = cmd.Substring(0, index);
 				}
-				yield return Tuple.Create(cmd, arg1);
+				if (cmd.Length == 0)
+					continue;
+				if (cmd[0] != '/' && cmd[0] != '-')
+					continue;
+				cmd = cmd.Substring(1);
+				yield return Tuple.Create(cmd.Trim(), arg1.Trim());
 			}
 		}
 	}

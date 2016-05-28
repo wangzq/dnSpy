@@ -18,10 +18,8 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using dnSpy.Contracts.Scripting;
 using dnSpy.Contracts.TextEditor;
 using dnSpy.Scripting.Roslyn.Common;
@@ -72,28 +70,28 @@ namespace dnSpy.Scripting.Roslyn.CSharp {
 
 			foreach (var t in ResponseFileReader.Read(rspFile)) {
 				switch (t.Item1.ToLowerInvariant()) {
-				case "/r":
-				case "/reference":
-					options.References.AddRange(GetReferences(t.Item2));
+				case "r":
+				case "reference":
+					options.References.AddRange(RespFileUtils.GetReferences(t.Item2));
 					break;
 
-				case "/u":
-				case "/using":
-				case "/usings":
-				case "/import":
-				case "/imports":
+				case "u":
+				case "using":
+				case "usings":
+				case "import":
+				case "imports":
 					options.Imports.AddRange(t.Item2.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
 					break;
 
-				case "/lib":
-				case "/libpath":
-				case "/libpaths":
-					options.LibPaths.AddRange(GetReferencePaths(t.Item2));
+				case "lib":
+				case "libpath":
+				case "libpaths":
+					options.LibPaths.AddRange(RespFileUtils.GetReferencePaths(t.Item2));
 					break;
 
-				case "/loadpath":
-				case "/loadpaths":
-					options.LoadPaths.AddRange(GetReferencePaths(t.Item2));
+				case "loadpath":
+				case "loadpaths":
+					options.LoadPaths.AddRange(RespFileUtils.GetReferencePaths(t.Item2));
 					break;
 
 				default:
@@ -101,29 +99,6 @@ namespace dnSpy.Scripting.Roslyn.CSharp {
 					break;
 				}
 			}
-		}
-
-		IEnumerable<string> GetReferencePaths(string s) =>
-			s.Split(new char[] { ';', ',' }, StringSplitOptions.RemoveEmptyEntries).Select(a => RemoveQuotes(a));
-
-		IEnumerable<string> GetReferences(string s) {
-			if (s.Length == 0)
-				yield break;
-			if (s[0] == '"') {
-				yield return RemoveQuotes(s);
-				yield break;
-			}
-			foreach (var x in s.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
-				yield return x;
-		}
-
-		string RemoveQuotes(string s) {
-			if (s.Length == 0 || s[0] != '"')
-				return s;
-			s = s.Substring(1);
-			if (s.Length > 0 && s[s.Length - 1] == '"')
-				s = s.Substring(0, s.Length - 1);
-			return s;
 		}
 	}
 }

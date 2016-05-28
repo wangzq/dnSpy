@@ -115,6 +115,15 @@ namespace dnSpy.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to _Wiki.
+        /// </summary>
+        public static string About_Wiki {
+            get {
+                return ResourceManager.GetString("About_Wiki", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to dnSpy is licensed under GPLv3..
         /// </summary>
         public static string AboutScreen_LicenseInfo {
@@ -138,24 +147,6 @@ namespace dnSpy.Properties {
         public static string AllFiles {
             get {
                 return ResourceManager.GetString("AllFiles", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AnyCPU.
-        /// </summary>
-        public static string Arch_AnyCPU {
-            get {
-                return ResourceManager.GetString("Arch_AnyCPU", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AnyCPU (32-bit preferred).
-        /// </summary>
-        public static string Arch_AnyCPU_Preferred {
-            get {
-                return ResourceManager.GetString("Arch_AnyCPU_Preferred", resourceCulture);
             }
         }
         
@@ -2435,15 +2426,6 @@ namespace dnSpy.Properties {
         public static string ToolWindowWinPosButtonToolTip {
             get {
                 return ResourceManager.GetString("ToolWindowWinPosButtonToolTip", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unknown runtime.
-        /// </summary>
-        public static string UnknownDotNetRuntime {
-            get {
-                return ResourceManager.GetString("UnknownDotNetRuntime", resourceCulture);
             }
         }
         

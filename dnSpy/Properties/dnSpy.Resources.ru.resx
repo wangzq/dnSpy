@@ -138,12 +138,6 @@
   <data name="AllFiles" xml:space="preserve">
     <value>Все файлы</value>
   </data>
-  <data name="Arch_AnyCPU" xml:space="preserve">
-    <value>AnyCPU</value>
-  </data>
-  <data name="Arch_AnyCPU_Preferred" xml:space="preserve">
-    <value>AnyCPU (предпочтительно 32-бит)</value>
-  </data>
   <data name="AssemblyExplorerCommand" xml:space="preserve">
     <value>Обозреватель _сборок</value>
   </data>
@@ -588,9 +582,6 @@
   <data name="TextEditorNewFormatterWarningMsg" xml:space="preserve">
     <value>Текстовый редактор использует новый быстрый форматтер. Он не поддерживает перенос слов и все символы unicode. Можете включить/выключить это в настройках.</value>
   </data>
-  <data name="UnknownDotNetRuntime" xml:space="preserve">
-    <value>Неизвестный рантайм</value>
-  </data>
   <data name="UnknownError" xml:space="preserve">
     <value>Возникла неизвестная ошибка</value>
   </data>
@@ -943,5 +934,11 @@
   </data>
   <data name="ExportToProject_ProjectGuid" xml:space="preserve">
     <value>_GUID проекта</value>
+  </data>
+  <data name="ShortCutKeyCtrlShiftW" xml:space="preserve">
+    <value>Ctrl+Shift+W</value>
+  </data>
+  <data name="About_Wiki" xml:space="preserve">
+    <value>_Wiki</value>
   </data>
 </root>

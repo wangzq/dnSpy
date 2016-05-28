@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="About_Issues" xml:space="preserve">
-    <value>汇报_Issues</value>
+    <value>上报错误(_I)</value>
   </data>
   <data name="About_LatestBuild" xml:space="preserve">
     <value>最新生成版本(_B)</value>
@@ -137,12 +137,6 @@
   </data>
   <data name="AllFiles" xml:space="preserve">
     <value>所有文件</value>
-  </data>
-  <data name="Arch_AnyCPU" xml:space="preserve">
-    <value>AnyCPU</value>
-  </data>
-  <data name="Arch_AnyCPU_Preferred" xml:space="preserve">
-    <value>AnyCPU (32位优先)</value>
   </data>
   <data name="AssemblyExplorerCommand" xml:space="preserve">
     <value>程序集资源管理器(_P)</value>
@@ -499,7 +493,7 @@
     <value>反序列化资源中的类型 （不安全）</value>
   </data>
   <data name="Options_Misc_Deserialize_ToolTip" xml:space="preserve">
-    <value>Any assembly could get loaded and executed with data from the resources.</value>
+    <value>可以从资源中的数据里加载任意程序集并运行.</value>
   </data>
   <data name="Options_Misc_ExplorerIntegration" xml:space="preserve">
     <value>Windows 资源管理器整合</value>
@@ -568,7 +562,7 @@
     <value>语法高亮</value>
   </data>
   <data name="TabsDlg_Activate_Button" xml:space="preserve">
-    <value>_Activate</value>
+    <value>活动(_A)</value>
   </data>
   <data name="TabsDlg_CloseWindow_Button" xml:space="preserve">
     <value>关闭窗口(_C)</value>
@@ -587,9 +581,6 @@
   </data>
   <data name="TextEditorNewFormatterWarningMsg" xml:space="preserve">
     <value>文本编辑器当前正使用新的文本格式化程序，此时不支持自动换行及Unicode字符（如中文）。在设置中可以启用/禁用此选项。</value>
-  </data>
-  <data name="UnknownDotNetRuntime" xml:space="preserve">
-    <value>未知运行时间</value>
   </data>
   <data name="UnknownError" xml:space="preserve">
     <value>发生未知错误</value>
@@ -943,5 +934,11 @@
   </data>
   <data name="ExportToProject_ProjectGuid" xml:space="preserve">
     <value>项目GUID (_P)</value>
+  </data>
+  <data name="ShortCutKeyCtrlShiftW" xml:space="preserve">
+    <value>Ctrl+Shift+W</value>
+  </data>
+  <data name="About_Wiki" xml:space="preserve">
+    <value>_Wiki</value>
   </data>
 </root>

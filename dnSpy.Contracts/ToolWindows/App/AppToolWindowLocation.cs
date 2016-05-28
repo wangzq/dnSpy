@@ -17,6 +17,9 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
+using System.ComponentModel;
+
 namespace dnSpy.Contracts.ToolWindows.App {
 	/// <summary>
 	/// Tool window location
@@ -30,7 +33,12 @@ namespace dnSpy.Contracts.ToolWindows.App {
 		Top,
 		/// <summary>Bottom</summary>
 		Bottom,
-		/// <summary>Default location, eg. <see cref="Bottom"/></summary>
-		Default,
+		/// <summary>Default horizontal location, eg. <see cref="Bottom"/></summary>
+		DefaultHorizontal,
+		/// <summary>Default horizontal location, eg. <see cref="Bottom"/></summary>
+		[Obsolete("Use DefaultHorizontal", true), Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+		Default = DefaultHorizontal,
+		/// <summary>Default vertical location, eg. <see cref="Left"/></summary>
+		DefaultVertical,
 	}
 }

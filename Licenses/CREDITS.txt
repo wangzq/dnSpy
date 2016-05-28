@@ -22,11 +22,12 @@ Translators:
 Chinese Simplified
 	Ulysses Wu
 	YanJun Sun
+	iFish
 	SquallATF
 	linkinshi
 
 Russian
-	Igor
+	Igor Besedin
 	Konctantin
 
 

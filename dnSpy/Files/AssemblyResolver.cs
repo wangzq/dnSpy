@@ -166,6 +166,13 @@ namespace dnSpy.Files {
 				file = TryLoadFromDir(asmName, exactCheck, sourceModuleDir);
 				if (file != null)
 					return file;
+                var detectedNugetPackageDir = DetectNugetPackageDir(asmName, sourceModuleDir);
+			    if (detectedNugetPackageDir != null)
+			    {
+                    file = TryLoadFromDir(asmName, exactCheck, detectedNugetPackageDir);
+                    if (file != null)
+                        return file;
+			    }
 			}
 			var ary = asmSearchPathsArray;
 			foreach (var path in ary) {
@@ -176,6 +183,12 @@ namespace dnSpy.Files {
 
 			return null;
 		}
+
+	    string DetectNugetPackageDir(IAssembly asmName, string dirPath)
+	    {
+            // TODO: return the dependent nuget package assembly path
+	        return null;
+	    }
 
 		IDnSpyFile TryLoadFromDir(IAssembly asmName, bool exactCheck, string dirPath) {
 			string baseName;

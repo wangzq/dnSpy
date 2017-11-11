@@ -451,7 +451,8 @@ namespace dnSpy.Documents.Tabs {
 
 		internal void UpdateTitleAndToolTip() {
 			Title = Content.Title;
-			ToolTip = Content.ToolTip;
+			var asm = Content.GetAssembly();
+			ToolTip = Content.ToolTip + (asm == null ? string.Empty : $" ({asm})");
 		}
 
 		public bool CanNavigateBackward => !removed && tabHistory.CanNavigateBackward;

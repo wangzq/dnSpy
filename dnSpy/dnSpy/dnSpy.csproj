@@ -184,6 +184,7 @@
     <Compile Include="Documents\Tabs\AsyncShowResult.cs" />
     <Compile Include="Documents\Tabs\Commands.cs" />
     <Compile Include="Documents\Tabs\CopyTokenCommand.cs" />
+    <Compile Include="Documents\Tabs\CopyXmlDocKeyCommand.cs" />
     <Compile Include="Documents\Tabs\DecompilationCache.cs" />
     <Compile Include="Documents\Tabs\DefaultDecompileNode.cs" />
     <Compile Include="Documents\Tabs\DefaultDocumentList.cs" />

@@ -121,7 +121,7 @@
     <value>_Haltepunkt hinzufügen</value>
   </data>
   <data name="AddExceptionCommand" xml:space="preserve">
-    <value>E_xception hinzufügen</value>
+    <value>_Ausnahme hinzufügen</value>
   </data>
   <data name="AppDomainNotAvailable" xml:space="preserve">
     <value>&lt;nicht verfügbar&gt;</value>
@@ -140,12 +140,6 @@
   </data>
   <data name="Attach_AttachToProcess" xml:space="preserve">
     <value>An den Prozess anhängen</value>
-  </data>
-  <data name="Attach_AttachToProcess32" xml:space="preserve">
-    <value>An den Prozess anhängen (nur 32-bit)</value>
-  </data>
-  <data name="Attach_AttachToProcess64" xml:space="preserve">
-    <value>An den Prozess anhängen (nur 64-bit)</value>
   </data>
   <data name="Attach_UseDnSpy32" xml:space="preserve">
     <value>Verwende dnSpy.exe beim Anhängen an 64-bit Prozesse</value>
@@ -208,7 +202,7 @@
     <value>Prozess</value>
   </data>
   <data name="Column_ProcessArchitecture" xml:space="preserve">
-    <value>Bogen</value>
+    <value>Arch</value>
   </data>
   <data name="Column_ProcessFilename" xml:space="preserve">
     <value>Dateiname</value>
@@ -295,7 +289,7 @@
     <value>_Debugge {0}</value>
   </data>
   <data name="Debug_EventDescription_Exception" xml:space="preserve">
-    <value>Ausname</value>
+    <value>Ausnahme</value>
   </data>
   <data name="Debug_EventDescription_LoadModule1" xml:space="preserve">
     <value>LoadModule DYN ={0} MEM ={1} {2:X8} {3:X8} {4}</value>
@@ -339,8 +333,8 @@
     <value>Auswerten nicht möglich wenn eine unbehandelte Ausnahme auftrat</value>
   </data>
   <data name="Error_StartWithoutDebuggingCouldNotStart" xml:space="preserve">
-    <value>Konnte '{0}' nicht starten
-ERROR: {0}</value>
+    <value>'{0}' konnte nicht gestartet werden
+FEHLER: {1}</value>
   </data>
   <data name="ExceptionSettingsCommand" xml:space="preserve">
     <value>Ausnahme_einstellungen</value>
@@ -409,7 +403,7 @@ FEHLER: {1}</value>
 Sind Sie sicher, dass Sie es ausklappen möchten?</value>
   </data>
   <data name="Locals_Error_CantEvaluateWhenThreadIsAtUnsafePoint" xml:space="preserve">
-    <value>Kann nicht auswerten wann der Thread an einem unsicheren Punkt ist. Entweder einen Schritt oder bis zum nächsten Haltepunkt ausführen.</value>
+    <value>Kann nicht auswerten wenn sich der Thread an einem unsicheren Punkt befindet. Entweder einen Schritt oder bis zum nächsten Haltepunkt ausführen.</value>
   </data>
   <data name="Locals_Error_EvalDisabledCantCallPropsAndMethods" xml:space="preserve">
     <value>Es ist derzeit nicht möglich, Eigenschaften und Methoden aufrufen</value>
@@ -1444,22 +1438,22 @@ Sind Sie sicher, dass Sie es ausklappen möchten?</value>
     <value>Haltepunkt</value>
   </data>
   <data name="BreakpointExpressionMustBeABooleanExpression" xml:space="preserve">
-    <value>Der Haltepunkt Ausdruck muss ein Boolescher Ausdruck sein</value>
+    <value>Die Haltepunktbedingung muss als boolescher Vorgang ausgewertet werden.</value>
   </data>
   <data name="DbgSettings_SuppressJITOptimization" xml:space="preserve">
-    <value>Suppress JIT optimization on module load</value>
+    <value>JIT-Optimierung beim Laden des Moduls unterdrücken</value>
   </data>
   <data name="DbgSettings_SuppressJITOptimization_ProgramModules" xml:space="preserve">
-    <value>Program modules</value>
+    <value>Programm Module</value>
   </data>
   <data name="DbgSettings_SuppressJITOptimization_SystemModules" xml:space="preserve">
-    <value>System modules</value>
+    <value>System Module</value>
   </data>
   <data name="RuntimeIsUnableToEvaluateExpression" xml:space="preserve">
-    <value>The runtime is unable to evaluate this expression.</value>
+    <value>Die Laufzeit kann diesen Ausdruck nicht auswerten.</value>
   </data>
   <data name="Exceptions_ToggleMatchingExceptions_ToolTip" xml:space="preserve">
-    <value>Enable or disable all exceptions matching the current search criteria</value>
+    <value>Alle Ausnahmen aktivieren bzw. deaktivieren, die mit den aktuellen Suchkriterien übereinstimmen</value>
   </data>
   <data name="DisableBreakpointCommand2" xml:space="preserve">
     <value>Haltepunkt _deaktivieren</value>
@@ -1471,6 +1465,12 @@ Sind Sie sicher, dass Sie es ausklappen möchten?</value>
     <value>Möchten Sie das Debuggen beenden?</value>
   </data>
   <data name="DbgSettings_FocusActiveProcess" xml:space="preserve">
-    <value>Give focus to debugged process</value>
+    <value>Fokussiere debuggten Prozess</value>
+  </data>
+  <data name="LoadAllModulesCommand" xml:space="preserve">
+    <value>Alle Module öffnen</value>
+  </data>
+  <data name="DbgSettings_HideDeprecatedError" xml:space="preserve">
+    <value>Veraltete Felder im Variablen-Fenster ausblenden</value>
   </data>
 </root>

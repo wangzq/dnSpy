@@ -40,7 +40,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl {
 			string filename = dnModule.Name;
 			bool isDynamic = dnModule.IsDynamic;
 			bool isInMemory = dnModule.IsInMemory;
-			bool isOptimized = CalculateIsOptimized(dnModule);
+			bool? isOptimized = CalculateIsOptimized(dnModule);
 			int order = dnModule.UniqueId;
 			InitializeExeFields(dnModule, filename, imageLayout, out var isExe, out var isDll, out var timestamp, out var version, out var assemblySimpleName);
 
@@ -120,7 +120,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl {
 			return DbgImageLayout.Memory;
 		}
 
-		static bool CalculateIsOptimized(DnModule dnModule) {
+		static bool? CalculateIsOptimized(DnModule dnModule) {
 			switch (dnModule.CachedJITCompilerFlags) {
 			case CorDebugJITCompilerFlags.CORDEBUG_JIT_DEFAULT:
 				return true;
@@ -129,7 +129,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl {
 				return false;
 			default:
 				Debug.Fail($"Unknown JIT compiler flags: {dnModule.CachedJITCompilerFlags}");
-				return false;
+				return null;
 			}
 		}
 
@@ -186,7 +186,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl {
 			isDll = !isExe;
 
 			// Roslyn sets bit 31 if /deterministic is used (the low 31 bits is not a timestamp)
-			if (peImage.ImageNTHeaders.FileHeader.TimeDateStamp < 0x80000000)
+			if (peImage.ImageNTHeaders.FileHeader.TimeDateStamp < 0x80000000 && peImage.ImageNTHeaders.FileHeader.TimeDateStamp != 0)
 				timestamp = Epoch.AddSeconds(peImage.ImageNTHeaders.FileHeader.TimeDateStamp);
 			else
 				timestamp = null;

@@ -38,8 +38,20 @@ Russian:
 Portuguese:
 
 	Raphael Aquiles
+	jp2masa
 
 German:
 
 	patricksadowski
 	li0nsar3c00l
+
+Spanish:
+
+	Isidro Padilla
+	Phid
+	lemalc
+
+Hungarian:
+
+	Gábor Mizda
+	Krisztián Szilágyi

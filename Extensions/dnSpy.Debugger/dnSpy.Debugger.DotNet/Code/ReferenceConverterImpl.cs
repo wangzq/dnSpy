@@ -25,6 +25,13 @@ namespace dnSpy.Debugger.DotNet.Code {
 	sealed class ReferenceConverterImpl : ReferenceConverter {
 		public override void Convert(ref object reference) {
 			switch (reference) {
+			case DbgDotNetCodeLocationImpl locImpl:
+				if ((locImpl.Options & DbgDotNetCodeLocationOptions.InvalidOffset) != 0)
+					reference = new DotNetTokenReference(locImpl.Module, locImpl.Token);
+				else
+					reference = new DotNetMethodBodyReference(locImpl.Module, locImpl.Token, locImpl.Offset);
+				break;
+
 			case DbgDotNetCodeLocation loc:
 				reference = new DotNetMethodBodyReference(loc.Module, loc.Token, loc.Offset);
 				break;

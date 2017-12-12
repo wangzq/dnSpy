@@ -78,6 +78,7 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 		public object TitleObject => new FormatterObject<ProcessVM>(this, PredefinedTextClassifierTags.ProcessesWindowTitle);
 		public object StateObject => new FormatterObject<ProcessVM>(this, PredefinedTextClassifierTags.ProcessesWindowState);
 		public object DebuggingObject => new FormatterObject<ProcessVM>(this, PredefinedTextClassifierTags.ProcessesWindowDebugging);
+		public object MachineObject => new FormatterObject<ProcessVM>(this, PredefinedTextClassifierTags.ProcessesWindowMachine);
 		public object PathObject => new FormatterObject<ProcessVM>(this, PredefinedTextClassifierTags.ProcessesWindowPath);
 		public DbgProcess Process { get; }
 		public IProcessContext Context { get; }
@@ -134,6 +135,7 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 		}
 
 		readonly ProcessesVM owner;
+		bool refreshTitleOnPause;
 
 		public ProcessVM(ProcessesVM owner, DbgProcess process, IProcessContext context, int order) {
 			this.owner = owner ?? throw new ArgumentNullException(nameof(owner));
@@ -144,6 +146,7 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 			process.PropertyChanged += DbgProcess_PropertyChanged;
 			process.IsRunningChanged += DbgProcess_IsRunningChanged;
 			process.DelayedIsRunningChanged += DbgProcess_DelayedIsRunningChanged;
+			refreshTitleOnPause = true;
 		}
 
 		// random thread
@@ -166,6 +169,7 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 			OnPropertyChanged(nameof(TitleObject));
 			OnPropertyChanged(nameof(StateObject));
 			OnPropertyChanged(nameof(DebuggingObject));
+			OnPropertyChanged(nameof(MachineObject));
 			OnPropertyChanged(nameof(PathObject));
 		}
 
@@ -211,6 +215,9 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 				break;
 
 			case nameof(Process.Machine):
+				OnPropertyChanged(nameof(MachineObject));
+				break;
+
 			case nameof(Process.Bitness):
 			case nameof(Process.ShouldDetach):
 				break;
@@ -222,16 +229,15 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 		}
 
 		// DbgManager thread
-		void DbgProcess_IsRunningChanged(object sender, EventArgs e) => UI(() => refreshTitlesOnPause = true);
-		bool refreshTitlesOnPause;
+		void DbgProcess_IsRunningChanged(object sender, EventArgs e) => UI(() => {
+			if (refreshTitleOnPause && !Process.IsRunning) {
+				refreshTitleOnPause = false;
+				RefreshTitle_UI();
+			}
+		});
 
 		// DbgManager thread
-		void DbgProcess_DelayedIsRunningChanged(object sender, EventArgs e) {
-			if (refreshTitlesOnPause && !Process.IsRunning) {
-				refreshTitlesOnPause = false;
-				UI(() => RefreshTitle_UI());
-			}
-		}
+		void DbgProcess_DelayedIsRunningChanged(object sender, EventArgs e) => UI(() => refreshTitleOnPause = true);
 
 		// UI thread
 		internal void Dispose() {

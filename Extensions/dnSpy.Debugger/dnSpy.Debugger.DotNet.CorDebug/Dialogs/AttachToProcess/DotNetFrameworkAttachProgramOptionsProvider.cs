@@ -22,15 +22,15 @@ using System.Collections.Generic;
 using System.Text;
 using dnSpy.Contracts.Debugger;
 using dnSpy.Contracts.Debugger.Attach;
-using dnSpy.Contracts.Debugger.DotNet.CorDebug;
 using dnSpy.Debugger.DotNet.CorDebug.Impl;
+using dnSpy.Debugger.DotNet.CorDebug.Impl.Attach;
 using dnSpy.Debugger.DotNet.CorDebug.Native;
 using DEMH = dndbg.COM.MetaHost;
 
 namespace dnSpy.Debugger.DotNet.CorDebug.Dialogs.AttachToProcess {
 	[ExportAttachProgramOptionsProviderFactory(PredefinedAttachProgramOptionsProviderNames.DotNetFramework)]
 	sealed class DotNetFrameworkAttachProgramOptionsProviderFactory : AttachProgramOptionsProviderFactory {
-		public override AttachProgramOptionsProvider Create() => new DotNetFrameworkAttachProgramOptionsProvider();
+		public override AttachProgramOptionsProvider Create(bool allFactories) => new DotNetFrameworkAttachProgramOptionsProvider();
 	}
 
 	sealed class DotNetFrameworkAttachProgramOptionsProvider : AttachProgramOptionsProvider {

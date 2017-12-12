@@ -31,5 +31,15 @@ namespace dnSpy.Contracts.Debugger.Attach {
 		/// .NET Core
 		/// </summary>
 		public const string DotNetCore = nameof(DotNetCore);
+
+		/// <summary>
+		/// Unity Editor
+		/// </summary>
+		public const string UnityEditor = nameof(UnityEditor);
+
+		/// <summary>
+		/// Unity Player
+		/// </summary>
+		public const string UnityPlayer = nameof(UnityPlayer);
 	}
 }

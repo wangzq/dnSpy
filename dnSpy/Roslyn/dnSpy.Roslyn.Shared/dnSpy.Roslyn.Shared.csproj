@@ -55,6 +55,8 @@
     <Compile Include="Debugger\FilterExpressionEvaluator\DbgFilterExpressionEvaluatorImpl.cs" />
     <Compile Include="Debugger\FilterExpressionEvaluator\EvalDelegateCreator.cs" />
     <Compile Include="Debugger\Formatters\CSharp\CSharpFormatter.cs" />
+    <Compile Include="Debugger\Formatters\CSharp\CSharpPrimitiveValueFormatter.cs" />
+    <Compile Include="Debugger\Formatters\CSharp\CSharpStackFrameFormatter.cs" />
     <Compile Include="Debugger\Formatters\CSharp\CSharpTypeFormatter.cs" />
     <Compile Include="Debugger\Formatters\CSharp\CSharpValueFormatter.cs" />
     <Compile Include="Debugger\Formatters\DbgValueFormatterOptionsExtensions.cs" />
@@ -67,6 +69,7 @@
     <Compile Include="Debugger\Formatters\ListCache.cs" />
     <Compile Include="Debugger\Formatters\NullableTypeUtils.cs" />
     <Compile Include="Debugger\Formatters\NumberUtils.cs" />
+    <Compile Include="Debugger\Formatters\StateMachineUtils.cs" />
     <Compile Include="Debugger\Formatters\ToStringFormatter.cs" />
     <Compile Include="Debugger\Formatters\TupleTypeUtils.cs" />
     <Compile Include="Debugger\Formatters\TypeFormatterOptions.cs" />
@@ -75,6 +78,8 @@
     <Compile Include="Debugger\Formatters\ValueFormatterOptionsExtensions.cs" />
     <Compile Include="Debugger\Formatters\ValueFormatterUtils.cs" />
     <Compile Include="Debugger\Formatters\VisualBasic\VisualBasicFormatter.cs" />
+    <Compile Include="Debugger\Formatters\VisualBasic\VisualBasicPrimitiveValueFormatter.cs" />
+    <Compile Include="Debugger\Formatters\VisualBasic\VisualBasicStackFrameFormatter.cs" />
     <Compile Include="Debugger\Formatters\VisualBasic\VisualBasicTypeFormatter.cs" />
     <Compile Include="Debugger\Formatters\VisualBasic\VisualBasicValueFormatter.cs" />
     <Compile Include="Debugger\GetLocalsAssemblyBuilder.cs" />
@@ -239,13 +244,15 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Shared.Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>dnSpy.Roslyn.Shared.Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Shared.Resources.ru.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Shared.Resources.zh-CN.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Shared.Resources.pt-PT.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Shared.Resources.de.resx" />
+    <EmbeddedResource Include="Properties\dnSpy.Roslyn.Shared.Resources.es-ES.resx" />
+    <EmbeddedResource Include="Properties\dnSpy.Roslyn.Shared.Resources.hu.resx" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="Intellisense\QuickInfo\InformationQuickInfoContentControl.xaml">

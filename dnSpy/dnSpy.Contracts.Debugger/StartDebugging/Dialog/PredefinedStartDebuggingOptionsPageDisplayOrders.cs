@@ -33,8 +33,23 @@ namespace dnSpy.Contracts.Debugger.StartDebugging.Dialog {
 		public static readonly double DotNetCore = 101000;
 
 		/// <summary>
-		/// Mono debug engine
+		/// Unity debug engine (start executable)
 		/// </summary>
-		public static readonly double DotNetMono = 102000;
+		public static readonly double DotNetUnity = 102000;
+
+		/// <summary>
+		/// Unity debug engine (connect to a waiting executable)
+		/// </summary>
+		public static readonly double DotNetUnityConnect = 103000;
+
+		/// <summary>
+		/// Mono debug engine (start executable)
+		/// </summary>
+		public static readonly double DotNetMono = 110000;
+
+		/// <summary>
+		/// Mono debug engine (connect to a waiting executable)
+		/// </summary>
+		public static readonly double DotNetMonoConnect = 111000;
 	}
 }

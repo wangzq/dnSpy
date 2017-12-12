@@ -47,6 +47,8 @@
     <Compile Include="Attach\AttachProgramOptions.cs" />
     <Compile Include="Attach\AttachProgramOptionsProvider.cs" />
     <Compile Include="Attach\AttachProgramOptionsProviderFactory.cs" />
+    <Compile Include="Attach\Dialogs\ShowAttachToProcessDialog.cs" />
+    <Compile Include="Attach\Dialogs\ShowAttachToProcessDialogOptions.cs" />
     <Compile Include="Attach\PredefinedArchitectureNames.cs" />
     <Compile Include="Attach\PredefinedAttachProgramOptionsProviderNames.cs" />
     <Compile Include="Breakpoints\Code\DbgBoundCodeBreakpoint.cs" />
@@ -69,7 +71,6 @@
     <Compile Include="Breakpoints\Modules\DbgModuleBreakpointsService.cs" />
     <Compile Include="CallStack\DbgCallStackService.cs" />
     <Compile Include="CallStack\DbgStackFrame.cs" />
-    <Compile Include="CallStack\DbgStackFrameFormatOptions.cs" />
     <Compile Include="CallStack\DbgStackWalker.cs" />
     <Compile Include="CallStack\TextEditor\DbgStackFrameGlyphTextMarkerLocationInfoProvider.cs" />
     <Compile Include="CallStack\TextEditor\DbgStackFrameTextViewMarker.cs" />
@@ -116,7 +117,6 @@
     <Compile Include="Engine\Evaluation\DbgEngineObjectId.cs" />
     <Compile Include="Engine\Evaluation\DbgEngineObjectIdFactory.cs" />
     <Compile Include="Engine\Evaluation\DbgEngineValue.cs" />
-    <Compile Include="Engine\Evaluation\DbgEngineValueFormatter.cs" />
     <Compile Include="Engine\Evaluation\DbgEngineValueNode.cs" />
     <Compile Include="Engine\Evaluation\DbgEngineValueNodeFactory.cs" />
     <Compile Include="Engine\Evaluation\DbgEngineValueNodeProvider.cs" />
@@ -131,8 +131,10 @@
     <Compile Include="Evaluation\DbgLanguageService.cs" />
     <Compile Include="Evaluation\DbgObjectId.cs" />
     <Compile Include="Evaluation\DbgObjectIdService.cs" />
+    <Compile Include="Evaluation\DbgStackFrameFormatterOptions.cs" />
     <Compile Include="Evaluation\DbgValue.cs" />
-    <Compile Include="Evaluation\DbgValueFormatter.cs" />
+    <Compile Include="Evaluation\DbgValueFormatterOptions.cs" />
+    <Compile Include="Evaluation\DbgValueFormatterTypeOptions.cs" />
     <Compile Include="Evaluation\DbgValueNode.cs" />
     <Compile Include="Evaluation\DbgValueNodeEvaluationOptions.cs" />
     <Compile Include="Evaluation\DbgValueNodeFactory.cs" />

@@ -136,7 +136,7 @@
     <value>Zeige vorherigen Befehl</value>
   </data>
   <data name="HelpCtrlA" xml:space="preserve">
-    <value>Wähle Eingabetext. Drücke erneut, um alle Texte zu markieren</value>
+    <value>Eingabetext markieren. Erneut drücken, um alles zu markieren</value>
   </data>
   <data name="HelpCtrlAltDown" xml:space="preserve">
     <value>Zeige nächsten Befehl entsprechend des aktuellen Eingabetextes</value>

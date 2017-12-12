@@ -20,7 +20,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using dnSpy.Debugger.Utilities;
 
 namespace dnSpy.Debugger.Attach {
 	// MS forces us to use an undocumented function and structures to get the command line.
@@ -96,9 +95,7 @@ namespace dnSpy.Debugger.Attach {
 		const int CommandLineOffset64 = 0x70;
 
 		static string TryGetCommandLineCore(IntPtr hProcess) {
-			int ptrSize = ProcessUtilities.GetBitness(hProcess) / 8;
-			if (ptrSize == 8 && IntPtr.Size == 4)
-				return null;// Can't read it
+			int ptrSize = IntPtr.Size;
 
 			ushort cmdlineLength;
 			IntPtr cmdlineBuffer;

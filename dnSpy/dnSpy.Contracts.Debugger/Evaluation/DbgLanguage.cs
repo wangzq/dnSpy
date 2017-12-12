@@ -48,11 +48,6 @@ namespace dnSpy.Contracts.Debugger.Evaluation {
 		public abstract DbgExpressionEvaluator ExpressionEvaluator { get; }
 
 		/// <summary>
-		/// Gets the value formatter
-		/// </summary>
-		public abstract DbgValueFormatter ValueFormatter { get; }
-
-		/// <summary>
 		/// Gets the formatter
 		/// </summary>
 		public abstract DbgFormatter Formatter { get; }
@@ -135,5 +130,11 @@ namespace dnSpy.Contracts.Debugger.Evaluation {
 		/// lock owned by a suspended thread.
 		/// </summary>
 		RunAllThreads				= 0x00000001,
+
+		/// <summary>
+		/// If method body info isn't needed, this option should be used. It prevents decompiling the
+		/// method to get sequence points and other debug info. Can be used when formatting stack frames.
+		/// </summary>
+		NoMethodBody				= 0x00000002,
 	}
 }

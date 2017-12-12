@@ -141,12 +141,6 @@
   <data name="Attach_AttachToProcess" xml:space="preserve">
     <value>Attach to Process</value>
   </data>
-  <data name="Attach_AttachToProcess32" xml:space="preserve">
-    <value>Attach to Process (32-bit only)</value>
-  </data>
-  <data name="Attach_AttachToProcess64" xml:space="preserve">
-    <value>Attach to Process (64-bit only)</value>
-  </data>
   <data name="Attach_UseDnSpy32" xml:space="preserve">
     <value>Use dnSpy.exe to attach to 64-bit processes</value>
   </data>
@@ -340,7 +334,7 @@
   </data>
   <data name="Error_StartWithoutDebuggingCouldNotStart" xml:space="preserve">
     <value>Could not start '{0}'
-ERROR: {0}</value>
+ERROR: {1}</value>
   </data>
   <data name="ExceptionSettingsCommand" xml:space="preserve">
     <value>E_xception Settings</value>
@@ -1472,5 +1466,11 @@ Are you sure you want to expand it?</value>
   </data>
   <data name="DbgSettings_FocusActiveProcess" xml:space="preserve">
     <value>Give focus to debugged process</value>
+  </data>
+  <data name="LoadAllModulesCommand" xml:space="preserve">
+    <value>Open All Modules</value>
+  </data>
+  <data name="DbgSettings_HideDeprecatedError" xml:space="preserve">
+    <value>Hide deprecated members in variables windows</value>
   </data>
 </root>

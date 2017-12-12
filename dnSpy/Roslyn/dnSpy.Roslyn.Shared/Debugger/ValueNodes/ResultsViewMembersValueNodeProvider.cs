@@ -18,6 +18,7 @@
 */
 
 using System;
+using System.IO;
 using System.Threading;
 using dnSpy.Contracts.Debugger;
 using dnSpy.Contracts.Debugger.CallStack;
@@ -70,12 +71,17 @@ namespace dnSpy.Roslyn.Shared.Debugger.ValueNodes {
 					if (loader.TryLoadAssembly(GetRequiredAssemblyFullName(context.Runtime)))
 						proxyCtor = EnumerableDebugViewHelper.GetEnumerableDebugViewConstructor(enumerableType);
 				}
-				if ((object)proxyCtor == null)
-					return string.Format(dnSpy_Roslyn_Shared_Resources.SystemCoreDllNotLoaded, GetRequiredAssemblyFileName(context.Runtime));
+				if ((object)proxyCtor == null) {
+					var asmFilename = GetRequiredAssemblyFilename(context.Runtime);
+					var asm = enumerableType.AppDomain.GetAssembly(Path.GetFileNameWithoutExtension(asmFilename));
+					if (asm == null)
+						return string.Format(dnSpy_Roslyn_Shared_Resources.SystemCoreDllNotLoaded, asmFilename);
+					return string.Format(dnSpy_Roslyn_Shared_Resources.TypeDoesNotExistInAssembly, EnumerableDebugViewHelper.GetDebugViewTypeDisplayName(enumerableType), asmFilename);
+				}
 			}
 
 			var runtime = context.Runtime.GetDotNetRuntime();
-			var proxyTypeResult = runtime.CreateInstance(context, frame, proxyCtor, new[] { instanceValue }, cancellationToken);
+			var proxyTypeResult = runtime.CreateInstance(context, frame, proxyCtor, new[] { instanceValue }, DbgDotNetInvokeOptions.None, cancellationToken);
 			if (proxyTypeResult.HasError)
 				return proxyTypeResult.ErrorMessage;
 
@@ -108,7 +114,7 @@ namespace dnSpy.Roslyn.Shared.Debugger.ValueNodes {
 			}
 		}
 
-		string GetRequiredAssemblyFileName(DbgRuntime runtime) {
+		string GetRequiredAssemblyFilename(DbgRuntime runtime) {
 			switch (GetClrVersion(runtime)) {
 			case ClrVersion.CLR2:
 			case ClrVersion.CLR4:		return "System.Core.dll";

@@ -17,6 +17,7 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -29,6 +30,7 @@ using dnSpy.Debugger.DotNet.Metadata;
 
 namespace dnSpy.Debugger.DotNet.Evaluation.Engine.Interpreter {
 	sealed class InterpreterLocalsProvider : VariablesProvider {
+		static ReadOnlyCollection<DmdLocalVariableInfo> emptyLocalVariableInfos = new ReadOnlyCollection<DmdLocalVariableInfo>(Array.Empty<DmdLocalVariableInfo>());
 		readonly DebuggerRuntimeImpl runtime;
 		readonly Dictionary<int, DbgDotNetValue> extraLocals;
 		VariablesProvider localsProvider;
@@ -42,7 +44,7 @@ namespace dnSpy.Debugger.DotNet.Evaluation.Engine.Interpreter {
 
 		internal void Initialize(DmdMethodBody realMethodBody, VariablesProvider localsProvider) {
 			Debug.Assert(extraLocals.Count == 0);
-			realLocalVariables = realMethodBody.LocalVariables;
+			realLocalVariables = realMethodBody?.LocalVariables ?? emptyLocalVariableInfos;
 			this.localsProvider = localsProvider;
 		}
 
@@ -50,6 +52,12 @@ namespace dnSpy.Debugger.DotNet.Evaluation.Engine.Interpreter {
 			Debug.Assert(extraLocals.Count == 0);
 			localVariables = body.LocalVariables;
 			localsProvider.Initialize(context, frame, method, body, cancellationToken);
+		}
+
+		public override DbgDotNetValue GetValueAddress(int index, DmdType targetType) {
+			if ((uint)index < (uint)realLocalVariables.Count)
+				return localsProvider.GetValueAddress(index, targetType);
+			return null;
 		}
 
 		public override DbgDotNetValueResult GetVariable(int index) {
@@ -70,7 +78,7 @@ namespace dnSpy.Debugger.DotNet.Evaluation.Engine.Interpreter {
 			if ((uint)index < (uint)realLocalVariables.Count)
 				return localsProvider.SetVariable(index, targetType, value);
 			if ((uint)index < (uint)localVariables.Count) {
-				extraLocals[index] = runtime.CreateValue(value);
+				extraLocals[index] = runtime.CreateValue(value, targetType);
 				return null;
 			}
 			return PredefinedEvaluationErrorMessages.InternalDebuggerError;

@@ -1362,10 +1362,10 @@ Sind Sie sicher, dass Sie das Fenster schließen möchten?</value>
     <value>Ein Ordner mit demselben Namen wie der Dateiname existiert bereits.</value>
   </data>
   <data name="Error_Filename_OnlyWhitespace" xml:space="preserve">
-    <value>Der Dateiname kann nicht nur Leerzeichen enthalten</value>
+    <value>Der Dateiname kann nicht nur aus Leerzeichen bestehen</value>
   </data>
   <data name="Error_Filename_ReservedOSFilename" xml:space="preserve">
-    <value>Der Dateiname ist ein reservierter Betriebssystem-Dateinamen und kann nicht verwendet werden.</value>
+    <value>Der Dateiname ist ein reservierter Betriebssystem-Dateiname und kann nicht verwendet werden.</value>
   </data>
   <data name="Error_Filename_TooLong" xml:space="preserve">
     <value>Dateiname ist zu lang.</value>
@@ -1614,7 +1614,7 @@ Sind Sie sicher, dass Sie das Fenster schließen möchten?</value>
     <value>_Keep alten MaxStack</value>
   </data>
   <data name="MethodBody_KeepOldMaxStack_ToolTip" xml:space="preserve">
-    <value>Berechne nicht den MaxStack-Wert, beim Speichern der Datei</value>
+    <value>MaxStack-Wert beim Speichern der Datei nicht neu berechnen</value>
   </data>
   <data name="MethodBody_LocalVariableSignatureToken" xml:space="preserve">
     <value>_LocalVarSigTok</value>

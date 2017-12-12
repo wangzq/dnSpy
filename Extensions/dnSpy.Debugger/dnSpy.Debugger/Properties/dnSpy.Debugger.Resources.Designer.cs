@@ -151,24 +151,6 @@ namespace dnSpy.Debugger.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Attach to Process (32-bit only).
-        /// </summary>
-        public static string Attach_AttachToProcess32 {
-            get {
-                return ResourceManager.GetString("Attach_AttachToProcess32", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Attach to Process (64-bit only).
-        /// </summary>
-        public static string Attach_AttachToProcess64 {
-            get {
-                return ResourceManager.GetString("Attach_AttachToProcess64", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Use dnSpy.exe to attach to 64-bit processes.
         /// </summary>
         public static string Attach_UseDnSpy32 {
@@ -1222,6 +1204,15 @@ namespace dnSpy.Debugger.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hide deprecated members in variables windows.
+        /// </summary>
+        public static string DbgSettings_HideDeprecatedError {
+            get {
+                return ResourceManager.GetString("DbgSettings_HideDeprecatedError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Highlight changed variables in variables windows.
         /// </summary>
         public static string DbgSettings_HighlightChangedVariables {
@@ -1808,7 +1799,7 @@ namespace dnSpy.Debugger.Properties {
         
         /// <summary>
         ///   Looks up a localized string similar to Could not start &apos;{0}&apos;
-        ///ERROR: {0}.
+        ///ERROR: {1}.
         /// </summary>
         public static string Error_StartWithoutDebuggingCouldNotStart {
             get {
@@ -2247,6 +2238,15 @@ namespace dnSpy.Debugger.Properties {
         public static string LanguageCommand {
             get {
                 return ResourceManager.GetString("LanguageCommand", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open All Modules.
+        /// </summary>
+        public static string LoadAllModulesCommand {
+            get {
+                return ResourceManager.GetString("LoadAllModulesCommand", resourceCulture);
             }
         }
         

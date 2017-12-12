@@ -196,7 +196,7 @@
     <value>MD-Token _kopieren</value>
   </data>
   <data name="CouldNotStartBrowser" xml:space="preserve">
-    <value>Konnte Browser nicht starten</value>
+    <value>Browser konnte nicht gestartet werden</value>
   </data>
   <data name="DecompilationCanceled" xml:space="preserve">
     <value>Der Vorgang wurde abgebrochen</value>
@@ -508,7 +508,7 @@
     <value>Speichern</value>
   </data>
   <data name="SavingCode" xml:space="preserve">
-    <value>Speichere...</value>
+    <value>Speichern...</value>
   </data>
   <data name="SearchAbortedMessage" xml:space="preserve">
     <value>Suche abgebrochen, mehr als {0:n0} Ergebnisse gefunden.</value>
@@ -520,7 +520,7 @@
     <value>Assemblies suchen</value>
   </data>
   <data name="Searching" xml:space="preserve">
-    <value>Suche...</value>
+    <value>Suchen...</value>
   </data>
   <data name="SearchMsdnCommand" xml:space="preserve">
     <value>_MSDN durchsuchen</value>
@@ -1485,7 +1485,7 @@ Der Filter kann in den Assembly-Explorer-Optionen geändert werden.</value>
     <value>Strg+V</value>
   </data>
   <data name="ShortCutKeyDelete" xml:space="preserve">
-    <value>Löschen</value>
+    <value>Entf</value>
     <comment>the delete key</comment>
   </data>
   <data name="ShowAllBytesCommand" xml:space="preserve">

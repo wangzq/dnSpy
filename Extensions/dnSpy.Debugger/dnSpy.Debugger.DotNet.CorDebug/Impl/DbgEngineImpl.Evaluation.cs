@@ -60,6 +60,14 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl {
 			}
 		}
 
+		internal DbgDotNetValue CreateDotNetValue_CorDebug(DbgCorValueHolder value) {
+			debuggerThread.VerifyAccess();
+			var dnValue = new DbgDotNetValueImpl(this, value);
+			lock (lockObj)
+				dotNetValuesToCloseOnContinue.Add(dnValue);
+			return dnValue;
+		}
+
 		internal void Close(DbgCorValueHolder value) {
 			if (CheckCorDebugThread()) {
 				value.Dispose_CorDebug();
@@ -102,7 +110,54 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl {
 			dnDebugger.DisposeHandle(value);
 		}
 
-		internal CorType GetType(CorAppDomain appDomain, DmdType type) => CorDebugTypeCreator.GetType(this, appDomain, type);
+		DbgDotNetRawValue? ReadField_CorDebug(CorValue obj, DbgAppDomain appDomain, string fieldName) {
+			if (obj == null)
+				return null;
+			var reflectionAppDomain = appDomain.GetReflectionAppDomain();
+			if (reflectionAppDomain == null)
+				return null;
+			DbgDotNetValueImpl objImp = null;
+			try {
+				objImp = CreateDotNetValue_CorDebug(obj, reflectionAppDomain, tryCreateStrongHandle: false) as DbgDotNetValueImpl;
+				if (objImp == null)
+					return null;
+				return ReadField_CorDebug(objImp, fieldName);
+			}
+			finally {
+				objImp?.Dispose();
+			}
+		}
+
+		DbgDotNetRawValue? ReadField_CorDebug(DbgDotNetValueImpl obj, string fieldName) {
+			var field = obj.Type.GetField(fieldName, DmdBindingFlags.Public | DmdBindingFlags.NonPublic | DmdBindingFlags.Instance);
+			Debug.Assert((object)field != null);
+			if ((object)field == null)
+				return null;
+
+			var dnAppDomain = ((DbgCorDebugInternalAppDomainImpl)obj.Type.AppDomain.GetDebuggerAppDomain().InternalAppDomain).DnAppDomain;
+			var corFieldDeclType = GetType(dnAppDomain.CorAppDomain, field.DeclaringType);
+			var objValue = DbgCorDebugInternalRuntimeImpl.TryGetObjectOrPrimitiveValue(obj.TryGetCorValue());
+			if (objValue == null)
+				return null;
+			if (objValue.IsObject) {
+				// This isn't a generic read-field method, so we won't try to load any classes by calling cctors.
+
+				var fieldValue = objValue.GetFieldValue(corFieldDeclType.Class, (uint)field.MetadataToken, out var hr);
+				if (fieldValue == null)
+					return null;
+				DbgDotNetValue dnValue = null;
+				try {
+					dnValue = CreateDotNetValue_CorDebug(fieldValue, field.AppDomain, tryCreateStrongHandle: false);
+					return dnValue.GetRawValue();
+				}
+				finally {
+					dnValue?.Dispose();
+				}
+			}
+			return null;
+		}
+
+		CorType GetType(CorAppDomain appDomain, DmdType type) => CorDebugTypeCreator.GetType(this, appDomain, type);
 
 		sealed class EvalTimedOut { }
 
@@ -131,7 +186,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl {
 			if (method.SpecialMethodKind != DmdSpecialMethodKind.Metadata)
 				return new DbgDotNetValueResult(CordbgErrorHelper.InternalError);
 
-			var reflectionAppDomain = thread.AppDomain.GetReflectionAppDomain() ?? throw new InvalidOperationException();
+			var reflectionAppDomain = method.AppDomain;
 			var methodDbgModule = method.Module.GetDebuggerModule() ?? throw new InvalidOperationException();
 			if (!TryGetDnModule(methodDbgModule, out var methodModule))
 				return new DbgDotNetValueResult(CordbgErrorHelper.InternalError);
@@ -343,7 +398,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl {
 			CorValue createdCorValue = null;
 			try {
 				var appDomain = ilFrame.GetCorAppDomain();
-				var reflectionAppDomain = thread.AppDomain.GetReflectionAppDomain() ?? throw new InvalidOperationException();
+				var reflectionAppDomain = ilFrame.GetReflectionModule().AppDomain;
 				using (var dnEval = dnDebugger.CreateEval(cancellationToken, suspendOtherThreads: (context.Options & DbgEvaluationContextOptions.RunAllThreads) == 0)) {
 					dnEval.SetThread(dnThread);
 					dnEval.SetTimeout(context.FuncEvalTimeout);
@@ -405,7 +460,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Impl {
 			CreateCorValueResult createResult = default;
 			try {
 				var appDomain = ilFrame.GetCorAppDomain();
-				var reflectionAppDomain = thread.AppDomain.GetReflectionAppDomain() ?? throw new InvalidOperationException();
+				var reflectionAppDomain = targetType.AppDomain;
 				using (var dnEval = dnDebugger.CreateEval(cancellationToken, suspendOtherThreads: (context.Options & DbgEvaluationContextOptions.RunAllThreads) == 0)) {
 					dnEval.SetThread(dnThread);
 					dnEval.SetTimeout(context.FuncEvalTimeout);

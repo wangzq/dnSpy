@@ -55,7 +55,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Steppers {
 			if (IsClosed)
 				return;
 			Debug.Assert(StepComplete != null);
-			StepComplete?.Invoke(this, new DbgEngineStepCompleteEventArgs(thread, tag, error));
+			StepComplete?.Invoke(this, new DbgEngineStepCompleteEventArgs(thread, tag, error, false));
 		}
 
 		public override void Step(object tag, DbgEngineStepKind step) => engine.CorDebugThread(() => Step_CorDebug(tag, step));
@@ -95,14 +95,14 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Steppers {
 				return;
 
 			case DbgEngineStepKind.StepOut:
-				newCorStepper = dbg.StepOut(frame, (_, e) => StepCompleted(e, newCorStepper, tag, null));
-				break;
+				newCorStepper = dbg.StepOut(frame, (_, e) => StepCompleted(e, newCorStepper, tag));
+				SaveStepper(newCorStepper, tag);
+				return;
 
 			default:
 				RaiseStepComplete(thread, tag, $"Unsupported step kind: {step}");
 				return;
 			}
-			SaveStepper(newCorStepper, tag);
 		}
 
 		void SaveStepper(CorStepper newCorStepper, object tag) {
@@ -125,11 +125,12 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Steppers {
 				SaveStepper(null, tag);
 			else {
 				uint continueCounter = dnThread.Debugger.ContinueCounter;
-				dbgDotNetCodeRangeService.GetCodeRanges(module, frame.Token, offset.Value, result => engine.CorDebugThread(() => GotStepRanges(frame, tag, isStepInto, result, continueCounter)));
+				dbgDotNetCodeRangeService.GetCodeRanges(module, frame.Token, offset.Value,
+					result => engine.CorDebugThread(() => GotStepRanges(frame, offset.Value, tag, isStepInto, result, continueCounter)));
 			}
 		}
 
-		void GotStepRanges(CorFrame frame, object tag, bool isStepInto, GetCodeRangeResult result, uint continueCounter) {
+		void GotStepRanges(CorFrame frame, uint offset, object tag, bool isStepInto, GetCodeRangeResult result, uint continueCounter) {
 			engine.VerifyCorDebugThread();
 			if (IsClosed)
 				return;
@@ -139,18 +140,15 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Steppers {
 				RaiseStepComplete(thread, tag, "Internal error");
 				return;
 			}
-			if (!result.Success) {
-				RaiseStepComplete(thread, tag, "Couldn't find statement code range");
-				return;
-			}
-
-			var ranges = ToStepRanges(result.StatementRanges);
+			// If we failed to find the statement ranges (result.Success == false), step anyway.
+			// We'll just step until the next sequence point instead of not doing anything.
+			var ranges = result.Success ? ToStepRanges(result.StatementRanges) : new StepRange[] { new StepRange(offset, offset + 1) };
 			CorStepper newCorStepper = null;
 			var dbg = dnThread.Debugger;
 			if (isStepInto)
-				newCorStepper = dbg.StepInto(frame, ranges, (_, e) => StepCompleted(e, newCorStepper, tag, null));
+				newCorStepper = dbg.StepInto(frame, ranges, (_, e) => StepCompleted(e, newCorStepper, tag));
 			else
-				newCorStepper = dbg.StepOver(frame, ranges, (_, e) => StepCompleted(e, newCorStepper, tag, null));
+				newCorStepper = dbg.StepOver(frame, ranges, (_, e) => StepCompleted(e, newCorStepper, tag));
 			SaveStepper(newCorStepper, tag);
 		}
 
@@ -183,7 +181,7 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Steppers {
 			return null;
 		}
 
-		void StepCompleted(StepCompleteDebugCallbackEventArgs e, CorStepper corStepper, object tag, object p) {
+		void StepCompleted(StepCompleteDebugCallbackEventArgs e, CorStepper corStepper, object tag) {
 			engine.VerifyCorDebugThread();
 			if (stepData == null || stepData.CorStepper != corStepper || stepData.Tag != tag)
 				return;
@@ -197,10 +195,10 @@ namespace dnSpy.Debugger.DotNet.CorDebug.Steppers {
 		public override void Cancel(object tag) => engine.CorDebugThread(() => Cancel_CorDebug(tag));
 		void Cancel_CorDebug(object tag) {
 			engine.VerifyCorDebugThread();
-			var oldDnStepperData = stepData;
-			if (oldDnStepperData == null)
+			var oldStepperData = stepData;
+			if (oldStepperData == null)
 				return;
-			if (oldDnStepperData.Tag != tag)
+			if (oldStepperData.Tag != tag)
 				return;
 			ForceCancel_CorDebug();
 		}

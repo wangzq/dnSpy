@@ -43,6 +43,9 @@ namespace dnSpy.Debugger.DotNet.CorDebug.CallStack.TextEditor {
 		}
 
 		public override IEnumerable<SnapshotSpan> GetFrameSpans(ITextView textView, NormalizedSnapshotSpanCollection spans) {
+			if (activeStatements.Count == 0)
+				yield break;
+
 			var docViewer = textView.TextBuffer.TryGetDocumentViewer();
 			if (docViewer == null)
 				yield break;

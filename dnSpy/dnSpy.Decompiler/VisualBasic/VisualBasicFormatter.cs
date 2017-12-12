@@ -90,7 +90,7 @@ namespace dnSpy.Decompiler.VisualBasic {
 		FormatterOptions options;
 		readonly CultureInfo cultureInfo;
 
-		static readonly Dictionary<string, string[]> nameToOperatorName = new Dictionary<string, string[]> {
+		static readonly Dictionary<string, string[]> nameToOperatorName = new Dictionary<string, string[]>(StringComparer.Ordinal) {
 			{ "op_UnaryPlus", "Operator +".Split(' ') },
 			{ "op_UnaryNegation", "Operator -".Split(' ') },
 			{ "op_False", "Operator IsFalse".Split(' ') },
@@ -654,10 +654,10 @@ namespace dnSpy.Decompiler.VisualBasic {
 				WriteIdentifier(TypeFormatterUtils.GetPropertyName(ovrMeth), VisualBasicMetadataTextColorProvider.Instance.GetColor(prop));
 			else
 				WriteIdentifier(prop.Name, VisualBasicMetadataTextColorProvider.Instance.GetColor(prop));
+			WriteToken(prop);
 			WriteGenericArguments(ref info);
 			if (accessorKind != AccessorKind.None || prop.PropertySig.GetParamCount() != 0)
 				WriteMethodParameterList(ref info, PropertyParenOpen, PropertyParenClose);
-			WriteToken(prop);
 
 			WriteReturnType(ref info);
 		}
@@ -883,8 +883,6 @@ namespace dnSpy.Decompiler.VisualBasic {
 							if (rank == 0)
 								OutputWrite("<RANK0>", BoxedTextColor.Error);
 							else {
-								if (rank == 1)
-									OutputWrite("*", BoxedTextColor.Operator);
 								var indexes = aryType.GetLowerBounds();
 								var dims = aryType.GetSizes();
 								if (ShowArrayValueSizes && (uint)indexes.Count == rank && (uint)dims.Count == rank) {
@@ -901,6 +899,8 @@ namespace dnSpy.Decompiler.VisualBasic {
 									}
 								}
 								else {
+									if (rank == 1)
+										OutputWrite("*", BoxedTextColor.Operator);
 									for (uint i = 1; i < rank; i++)
 										OutputWrite(",", BoxedTextColor.Punctuation);
 								}
@@ -1228,7 +1228,7 @@ namespace dnSpy.Decompiler.VisualBasic {
 						WriteToken(pd);
 					}
 					else
-						WriteIdentifier("A_" + i.ToString(), BoxedTextColor.Parameter);
+						WriteIdentifier("A_" + (baseIndex + i).ToString(), BoxedTextColor.Parameter);
 				}
 				if (ShowParameterTypes) {
 					if (ShowParameterNames) {

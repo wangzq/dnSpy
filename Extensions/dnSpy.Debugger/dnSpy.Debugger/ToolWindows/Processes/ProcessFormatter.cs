@@ -19,6 +19,7 @@
 
 using System;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using dnSpy.Contracts.Debugger;
 using dnSpy.Contracts.Text;
 using dnSpy.Debugger.Properties;
@@ -62,11 +63,21 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 			}
 		}
 
-		public void WriteId(ITextColorWriter output, DbgProcess process) {
-			if (useHex) {
-				// Lower case like in VS
-				output.Write(BoxedTextColor.Number, "0x" + process.Id.ToString("x8"));
+		public void WriteMachine(ITextColorWriter output, DbgMachine machine) => output.Write(BoxedTextColor.Text, GetMachineString(machine));
+
+		static string GetMachineString(DbgMachine machine) {
+			switch (machine) {
+			case DbgMachine.X86:		return "x86";
+			case DbgMachine.X64:		return "x64";
+			default:
+				Debug.Fail($"Unknown arch: {machine}");
+				return "???";
 			}
+		}
+
+		public void WriteId(ITextColorWriter output, DbgProcess process) {
+			if (useHex)
+				output.Write(BoxedTextColor.Number, "0x" + process.Id.ToString("X8"));
 			else
 				output.Write(BoxedTextColor.Number, process.Id.ToString());
 		}

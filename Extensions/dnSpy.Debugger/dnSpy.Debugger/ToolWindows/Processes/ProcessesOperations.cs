@@ -25,11 +25,11 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using dnSpy.Contracts.Debugger;
+using dnSpy.Contracts.Debugger.Attach.Dialogs;
 using dnSpy.Contracts.Debugger.CallStack;
 using dnSpy.Contracts.Debugger.Steppers;
 using dnSpy.Contracts.Documents;
 using dnSpy.Contracts.Text;
-using dnSpy.Debugger.Dialogs.AttachToProcess;
 using dnSpy.Debugger.UI;
 
 namespace dnSpy.Debugger.ToolWindows.Processes {
@@ -106,6 +106,8 @@ namespace dnSpy.Debugger.ToolWindows.Processes {
 				formatter.WriteState(output, vm);
 				output.Write(BoxedTextColor.Text, "\t");
 				formatter.WriteDebugging(output, vm.Process);
+				output.Write(BoxedTextColor.Text, "\t");
+				formatter.WriteMachine(output, vm.Process.Machine);
 				output.Write(BoxedTextColor.Text, "\t");
 				formatter.WritePath(output, vm.Process);
 				output.WriteLine();

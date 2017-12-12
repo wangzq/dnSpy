@@ -35,6 +35,11 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		DbgDotNetDispatcher Dispatcher { get; }
 
 		/// <summary>
+		/// Gets the feature flags
+		/// </summary>
+		DbgDotNetRuntimeFeatures Features { get; }
+
+		/// <summary>
 		/// Gets the module id
 		/// </summary>
 		/// <param name="module">Module</param>
@@ -68,6 +73,17 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		DmdMethodBase GetFrameMethod(DbgEvaluationContext context, DbgStackFrame frame, CancellationToken cancellationToken);
 
 		/// <summary>
+		/// Loads the address of an instance or a static field or returns null if it's not supported
+		/// </summary>
+		/// <param name="context">Context</param>
+		/// <param name="frame">Stack frame</param>
+		/// <param name="obj">Instance object or null if it's a static field</param>
+		/// <param name="field">Field</param>
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns></returns>
+		DbgDotNetValue LoadFieldAddress(DbgEvaluationContext context, DbgStackFrame frame, DbgDotNetValue obj, DmdFieldInfo field, CancellationToken cancellationToken);
+
+		/// <summary>
 		/// Loads an instance or a static field
 		/// </summary>
 		/// <param name="context">Context</param>
@@ -98,9 +114,10 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		/// <param name="obj">Instance object or null if it's a static field</param>
 		/// <param name="method">Method</param>
 		/// <param name="arguments">Arguments: A <see cref="DbgDotNetValue"/> or a primitive number or a string or arrays of primitive numbers / strings</param>
+		/// <param name="invokeOptions">Invoke options</param>
 		/// <param name="cancellationToken">Cancellation token</param>
 		/// <returns></returns>
-		DbgDotNetValueResult Call(DbgEvaluationContext context, DbgStackFrame frame, DbgDotNetValue obj, DmdMethodBase method, object[] arguments, CancellationToken cancellationToken);
+		DbgDotNetValueResult Call(DbgEvaluationContext context, DbgStackFrame frame, DbgDotNetValue obj, DmdMethodBase method, object[] arguments, DbgDotNetInvokeOptions invokeOptions, CancellationToken cancellationToken);
 
 		/// <summary>
 		/// Creates a new instance of a type by calling its constructor
@@ -109,9 +126,10 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		/// <param name="frame">Stack frame</param>
 		/// <param name="ctor">Constructor</param>
 		/// <param name="arguments">Arguments: A <see cref="DbgDotNetValue"/> or a primitive number or a string or arrays of primitive numbers / strings</param>
+		/// <param name="invokeOptions">Invoke options</param>
 		/// <param name="cancellationToken">Cancellation token</param>
 		/// <returns></returns>
-		DbgDotNetValueResult CreateInstance(DbgEvaluationContext context, DbgStackFrame frame, DmdConstructorInfo ctor, object[] arguments, CancellationToken cancellationToken);
+		DbgDotNetValueResult CreateInstance(DbgEvaluationContext context, DbgStackFrame frame, DmdConstructorInfo ctor, object[] arguments, DbgDotNetInvokeOptions invokeOptions, CancellationToken cancellationToken);
 
 		/// <summary>
 		/// Creates a new instance of a type. All fields are initialized to 0 or null. The constructor isn't called.
@@ -203,7 +221,7 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		DbgDotNetValue GetReturnValue(DbgEvaluationContext context, DbgStackFrame frame, uint id, CancellationToken cancellationToken);
 
 		/// <summary>
-		/// Gets a local value or null if the local doesn't exist or if it's not possible to read it (eg. optimized code)
+		/// Gets a local value
 		/// </summary>
 		/// <param name="context">Context</param>
 		/// <param name="frame">Stack frame</param>
@@ -213,7 +231,7 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		DbgDotNetValueResult GetLocalValue(DbgEvaluationContext context, DbgStackFrame frame, uint index, CancellationToken cancellationToken);
 
 		/// <summary>
-		/// Gets a parameter value or null if the parameter doesn't exist or if it's not possible to read it (eg. optimized code)
+		/// Gets a parameter value
 		/// </summary>
 		/// <param name="context">Context</param>
 		/// <param name="frame">Stack frame</param>
@@ -247,6 +265,28 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		string SetParameterValue(DbgEvaluationContext context, DbgStackFrame frame, uint index, DmdType targetType, object value, CancellationToken cancellationToken);
 
 		/// <summary>
+		/// Gets the address of a local value or null if it's not supported
+		/// </summary>
+		/// <param name="context">Context</param>
+		/// <param name="frame">Stack frame</param>
+		/// <param name="index">Metadata index of local</param>
+		/// <param name="targetType">Type of the local</param>
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns></returns>
+		DbgDotNetValue GetLocalValueAddress(DbgEvaluationContext context, DbgStackFrame frame, uint index, DmdType targetType, CancellationToken cancellationToken);
+
+		/// <summary>
+		/// Gets the address of a parameter value or null if it's not supported
+		/// </summary>
+		/// <param name="context">Context</param>
+		/// <param name="frame">Stack frame</param>
+		/// <param name="index">Metadata index of local</param>
+		/// <param name="targetType">Type of the parameter</param>
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns></returns>
+		DbgDotNetValue GetParameterValueAddress(DbgEvaluationContext context, DbgStackFrame frame, uint index, DmdType targetType, CancellationToken cancellationToken);
+
+		/// <summary>
 		/// Creates a simple value (a primitive number or a string, or arrays of those types)
 		/// </summary>
 		/// <param name="context">Context</param>
@@ -255,6 +295,16 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		/// <param name="cancellationToken">Cancellation token</param>
 		/// <returns></returns>
 		DbgDotNetCreateValueResult CreateValue(DbgEvaluationContext context, DbgStackFrame frame, object value, CancellationToken cancellationToken);
+
+		/// <summary>
+		/// Boxes the value type
+		/// </summary>
+		/// <param name="context">Context</param>
+		/// <param name="frame">Stack frame</param>
+		/// <param name="value">Value to box</param>
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns></returns>
+		DbgDotNetCreateValueResult Box(DbgEvaluationContext context, DbgStackFrame frame, object value, CancellationToken cancellationToken);
 
 		/// <summary>
 		/// Returns true if object IDs are supported by this runtime
@@ -315,6 +365,37 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		/// <param name="b">Value #2</param>
 		/// <returns></returns>
 		bool? Equals(DbgDotNetValue a, DbgDotNetValue b);
+	}
+
+	/// <summary>
+	/// Invoke options
+	/// </summary>
+	[Flags]
+	public enum DbgDotNetInvokeOptions {
+		/// <summary>
+		/// No bit is set
+		/// </summary>
+		None				= 0,
+
+		/// <summary>
+		/// Non-virtual call
+		/// </summary>
+		NonVirtual			= 0x00000001,
+	}
+
+	/// <summary>
+	/// .NET runtime features
+	/// </summary>
+	public enum DbgDotNetRuntimeFeatures {
+		/// <summary>
+		/// No bit is set
+		/// </summary>
+		None				= 0,
+
+		/// <summary>
+		/// Calling generic methods isn't supported
+		/// </summary>
+		NoGenericMethods	= 0x00000001,
 	}
 
 	/// <summary>

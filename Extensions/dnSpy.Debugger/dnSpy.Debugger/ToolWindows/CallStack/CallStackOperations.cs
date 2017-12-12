@@ -29,6 +29,7 @@ using dnSpy.Contracts.Debugger.Breakpoints.Code;
 using dnSpy.Contracts.Debugger.Breakpoints.Code.Dialogs;
 using dnSpy.Contracts.Debugger.CallStack;
 using dnSpy.Contracts.Debugger.Code;
+using dnSpy.Contracts.Debugger.Evaluation;
 using dnSpy.Contracts.Documents;
 using dnSpy.Contracts.Text;
 using dnSpy.Debugger.Breakpoints.Code;
@@ -63,9 +64,15 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 		public abstract void EditBreakpointSettings();
 		public abstract bool CanExportBreakpoint { get; }
 		public abstract void ExportBreakpoint();
+		public abstract IList<DbgLanguage> GetLanguages();
+		public abstract DbgLanguage GetCurrentLanguage();
+		public abstract void SetCurrentLanguage(DbgLanguage language);
 		public abstract bool CanToggleUseHexadecimal { get; }
 		public abstract void ToggleUseHexadecimal();
 		public abstract bool UseHexadecimal { get; set; }
+		public abstract bool CanToggleUseDigitSeparators { get; }
+		public abstract void ToggleUseDigitSeparators();
+		public abstract bool UseDigitSeparators { get; set; }
 		public abstract bool ShowReturnTypes { get; set; }
 		public abstract bool ShowParameterTypes { get; set; }
 		public abstract bool ShowParameterNames { get; set; }
@@ -95,13 +102,14 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 		readonly Lazy<DbgCodeBreakpointSerializerService> dbgCodeBreakpointSerializerService;
 		readonly Lazy<DbgCodeBreakpointsService> dbgCodeBreakpointsService;
 		readonly Lazy<DbgManager> dbgManager;
+		readonly Lazy<DbgLanguageService> dbgLanguageService;
 
 		ObservableCollection<StackFrameVM> AllItems => callStackVM.AllItems;
 		ObservableCollection<StackFrameVM> SelectedItems => callStackVM.SelectedItems;
 		IEnumerable<StackFrameVM> SortedSelectedItems => SelectedItems.OrderBy(a => a.Index);
 
 		[ImportingConstructor]
-		CallStackOperationsImpl(ICallStackVM callStackVM, DebuggerSettings debuggerSettings, CallStackDisplaySettings callStackDisplaySettings, Lazy<ReferenceNavigatorService> referenceNavigatorService, Lazy<DbgCallStackService> dbgCallStackService, Lazy<ShowCodeBreakpointSettingsService> showCodeBreakpointSettingsService, Lazy<DbgCodeBreakpointSerializerService> dbgCodeBreakpointSerializerService, Lazy<DbgCodeBreakpointsService> dbgCodeBreakpointsService, Lazy<DbgManager> dbgManager) {
+		CallStackOperationsImpl(ICallStackVM callStackVM, DebuggerSettings debuggerSettings, CallStackDisplaySettings callStackDisplaySettings, Lazy<ReferenceNavigatorService> referenceNavigatorService, Lazy<DbgCallStackService> dbgCallStackService, Lazy<ShowCodeBreakpointSettingsService> showCodeBreakpointSettingsService, Lazy<DbgCodeBreakpointSerializerService> dbgCodeBreakpointSerializerService, Lazy<DbgCodeBreakpointsService> dbgCodeBreakpointsService, Lazy<DbgManager> dbgManager, Lazy<DbgLanguageService> dbgLanguageService) {
 			this.callStackVM = callStackVM;
 			this.debuggerSettings = debuggerSettings;
 			this.callStackDisplaySettings = callStackDisplaySettings;
@@ -111,6 +119,7 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 			this.dbgCodeBreakpointSerializerService = dbgCodeBreakpointSerializerService;
 			this.dbgCodeBreakpointsService = dbgCodeBreakpointsService;
 			this.dbgManager = dbgManager;
+			this.dbgLanguageService = dbgLanguageService;
 		}
 
 		public override bool CanCopy => SelectedItems.Count != 0;
@@ -166,7 +175,13 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 			//TODO:
 		}
 
-		public override bool CanRunToCursor => SelectedItems.Count == 1 && SelectedItems[0] is NormalStackFrameVM vm && vm.Index != 0 && vm.Frame.Location is DbgCodeLocation location && dbgCodeBreakpointsService.Value.TryGetBreakpoint(location) == null;
+		public override bool CanRunToCursor =>
+			SelectedItems.Count == 1 &&
+			SelectedItems[0] is NormalStackFrameVM vm &&
+			(vm.Frame.Flags & DbgStackFrameFlags.LocationIsNextStatement) != 0 &&
+			vm.Index != 0 &&
+			vm.Frame.Location is DbgCodeLocation location &&
+			dbgCodeBreakpointsService.Value.TryGetBreakpoint(location) == null;
 		public override void RunToCursor() {
 			if (!CanRunToCursor)
 				return;
@@ -198,6 +213,8 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 			var vm = SelectedItems[0] as NormalStackFrameVM;
 			if (vm == null)
 				return null;
+			if ((vm.Frame.Flags & DbgStackFrameFlags.LocationIsNextStatement) == 0)
+				return null;
 			var location = vm.Frame.Location;
 			if (location == null)
 				return null;
@@ -211,6 +228,8 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 					return BreakpointsCommandKind.None;
 				var vm = SelectedItems[0] as NormalStackFrameVM;
 				if (vm == null)
+					return BreakpointsCommandKind.None;
+				if ((vm.Frame.Flags & DbgStackFrameFlags.LocationIsNextStatement) == 0)
 					return BreakpointsCommandKind.None;
 				var location = vm.Frame.Location;
 				if (location == null)
@@ -289,11 +308,41 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 				dbgCodeBreakpointSerializerService.Value.Save(new[] { bp });
 		}
 
+		DbgRuntime CurrentRuntime => dbgManager.Value.CurrentThread.Current?.Runtime;
+
+		public override IList<DbgLanguage> GetLanguages() {
+			var runtime = CurrentRuntime;
+			if (runtime == null)
+				return Array.Empty<DbgLanguage>();
+			return dbgLanguageService.Value.GetLanguages(runtime.RuntimeKindGuid);
+		}
+
+		public override DbgLanguage GetCurrentLanguage() {
+			var runtime = CurrentRuntime;
+			if (runtime == null)
+				return null;
+			return dbgLanguageService.Value.GetCurrentLanguage(runtime.RuntimeKindGuid);
+		}
+
+		public override void SetCurrentLanguage(DbgLanguage language) {
+			var runtime = CurrentRuntime;
+			if (runtime == null)
+				return;
+			dbgLanguageService.Value.SetCurrentLanguage(runtime.RuntimeKindGuid, language);
+		}
+
 		public override bool CanToggleUseHexadecimal => true;
 		public override void ToggleUseHexadecimal() => UseHexadecimal = !UseHexadecimal;
 		public override bool UseHexadecimal {
 			get => debuggerSettings.UseHexadecimal;
 			set => debuggerSettings.UseHexadecimal = value;
+		}
+
+		public override bool CanToggleUseDigitSeparators => true;
+		public override void ToggleUseDigitSeparators() => UseDigitSeparators = !UseDigitSeparators;
+		public override bool UseDigitSeparators {
+			get => debuggerSettings.UseDigitSeparators;
+			set => debuggerSettings.UseDigitSeparators = value;
 		}
 
 		public override bool ShowReturnTypes {

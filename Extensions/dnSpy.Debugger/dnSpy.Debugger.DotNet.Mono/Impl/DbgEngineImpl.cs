@@ -176,12 +176,14 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 
 		abstract class PendingMessage {
 			public abstract bool MustWaitForRun { get; }
+			public abstract bool RequireResumeVM { get; }
 			public abstract bool RaiseMessage();
 		}
 		sealed class NormalPendingMessage : PendingMessage {
 			readonly DbgEngineImpl engine;
 			readonly DbgEngineMessage message;
 			public override bool MustWaitForRun { get; }
+			public override bool RequireResumeVM => true;
 			public NormalPendingMessage(DbgEngineImpl engine, bool mustWaitForRun, DbgEngineMessage message) {
 				this.engine = engine;
 				MustWaitForRun = mustWaitForRun;
@@ -196,12 +198,15 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 			readonly Action actionRaiseMessage;
 			readonly Func<bool> funcRaiseMessage;
 			public override bool MustWaitForRun { get; }
+			public override bool RequireResumeVM { get; }
 			public DelegatePendingMessage(bool mustWaitForRun, Action raiseMessage) {
 				MustWaitForRun = mustWaitForRun;
+				RequireResumeVM = true;
 				actionRaiseMessage = raiseMessage;
 			}
-			public DelegatePendingMessage(bool mustWaitForRun, Func<bool> raiseMessage) {
+			public DelegatePendingMessage(bool mustWaitForRun, bool requireResumeVM, Func<bool> raiseMessage) {
 				MustWaitForRun = mustWaitForRun;
+				RequireResumeVM = requireResumeVM;
 				funcRaiseMessage = raiseMessage;
 			}
 			public override bool RaiseMessage() {
@@ -237,9 +242,15 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 					var pendingMessage = pendingMessages[0];
 					pendingMessages.RemoveAt(0);
 					bool raisedMessage = pendingMessage.RaiseMessage();
-					if (raisedMessage && pendingMessage.MustWaitForRun) {
-						nextSendRunCounter = runCounter + 1;
-						return true;
+					if (pendingMessage.MustWaitForRun) {
+						if (raisedMessage) {
+							nextSendRunCounter = runCounter + 1;
+							return true;
+						}
+						else if (pendingMessage.RequireResumeVM) {
+							if (!DecrementAndResume())
+								break;
+						}
 					}
 				}
 			}
@@ -486,6 +497,39 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 			suspendCount--;
 		}
 
+		bool DecrementAndResume() {
+			debuggerThread.VerifyAccess();
+			try {
+				ResumeVirtualMachine();
+				DecrementSuspendCount();
+				return true;
+			}
+			catch (VMDisconnectedException) {
+			}
+			return false;
+		}
+
+		void ResumeVirtualMachine() {
+			debuggerThread.VerifyAccess();
+			try {
+				vm.Resume();
+			}
+			catch (VMNotSuspendedException) {
+			}
+		}
+
+		bool IncrementAndSuspend() {
+			debuggerThread.VerifyAccess();
+			try {
+				vm.Suspend();
+				IncrementSuspendCount();
+				return true;
+			}
+			catch (VMDisconnectedException) {
+			}
+			return false;
+		}
+
 		void EnableEvent(EventType evt, SuspendPolicy suspendPolicy) => vm.EnableEvents(new[] { evt }, suspendPolicy);
 
 		void InitializeVirtualMachine() {
@@ -646,20 +690,20 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 				case EventType.ThreadStart:
 					expectedSuspendPolicy = SuspendPolicy.All;
 					var tse = (ThreadStartEvent)evt;
-					SendMessage(new DelegatePendingMessage(true, () => InitializeDomain(tse.Thread.Domain)));
-					SendMessage(new DelegatePendingMessage(true, () => CreateThread(tse.Thread)));
+					SendMessage(new DelegatePendingMessage(true, false, () => InitializeDomain(tse.Thread.Domain)));
+					SendMessage(new DelegatePendingMessage(true, true, () => CreateThread(tse.Thread)));
 					break;
 
 				case EventType.ThreadDeath:
-					expectedSuspendPolicy = SuspendPolicy.All;
+					expectedSuspendPolicy = SuspendPolicy.None;
 					var tde = (ThreadDeathEvent)evt;
-					SendMessage(new DelegatePendingMessage(true, () => DestroyThread(TryGetThreadMirror(tde))));
+					SendMessage(new DelegatePendingMessage(false, () => DestroyThread(TryGetThreadMirror(tde))));
 					break;
 
 				case EventType.AppDomainCreate:
 					expectedSuspendPolicy = SuspendPolicy.All;
 					var adce = (AppDomainCreateEvent)evt;
-					SendMessage(new DelegatePendingMessage(true, () => CreateAppDomain(adce.Domain, isNewAppDomainEvent: true)));
+					SendMessage(new DelegatePendingMessage(true, true, () => CreateAppDomain(adce.Domain, isNewAppDomainEvent: true)));
 					break;
 
 				case EventType.AppDomainUnload:
@@ -683,9 +727,9 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 				case EventType.AssemblyLoad:
 					expectedSuspendPolicy = SuspendPolicy.All;
 					var ale = (AssemblyLoadEvent)evt;
-					SendMessage(new DelegatePendingMessage(true, () => InitializeDomain(ale.Assembly.Domain)));
+					SendMessage(new DelegatePendingMessage(true, false, () => InitializeDomain(ale.Assembly.Domain)));
 					// The debugger agent doesn't support netmodules...
-					SendMessage(new DelegatePendingMessage(true, () => CreateModule(ale.Assembly.ManifestModule)));
+					SendMessage(new DelegatePendingMessage(true, true, () => CreateModule(ale.Assembly.ManifestModule)));
 					break;
 
 				case EventType.AssemblyUnload:
@@ -750,7 +794,9 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 
 				case EventType.Exception:
 					var ee = (ExceptionEvent)evt;
-					if (ee.TryGetRequest() == uncaughtRequest)
+					// Unhandled exceptions in Unity seems to be ignored by Unity. Report them to the user but
+					// don't set isUnhandledException to true since we won't be able to func-eval.
+					if (ee.TryGetRequest() == uncaughtRequest && monoDebugRuntimeKind == MonoDebugRuntimeKind.Mono)
 						isUnhandledException = true;
 					if (IsEvaluating && !isUnhandledException) {
 						expectedSuspendPolicy = SuspendPolicy.None;
@@ -825,24 +871,14 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 			if (suspCounter < 0) {
 				Debug.Assert(suspCounter == -1);
 				while (suspCounter++ < 0) {
-					try {
-						vm.Resume();
-						DecrementSuspendCount();
-					}
-					catch (VMDisconnectedException) {
+					if (!DecrementAndResume())
 						break;
-					}
 				}
 			}
 			else if (suspCounter > 0) {
 				while (suspCounter-- > 0) {
-					try {
-						vm.Suspend();
-						IncrementSuspendCount();
-					}
-					catch (VMDisconnectedException) {
+					if (!IncrementAndSuspend())
 						break;
-					}
 				}
 			}
 			if (wasRunning && pendingRunCore && eventHandlerRecursionCounter == 1) {
@@ -1103,10 +1139,7 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 
 			if (suspendCount == 0) {
 				try {
-					vm.Suspend();
-					IncrementSuspendCount();
-				}
-				catch (VMDisconnectedException) {
+					IncrementAndSuspend();
 				}
 				catch (Exception ex) {
 					Debug.Fail(ex.Message);
@@ -1217,13 +1250,13 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 					InitializeVirtualMachine();
 					// Create the root AppDomain now since we want it to get id=1, which isn't guaranteed
 					// if it's an attach and we wait for AppDomainCreate events.
-					SendMessage(new DelegatePendingMessage(true, () => CreateAppDomain(vm.RootDomain, isNewAppDomainEvent: !processWasRunningOnAttach)));
+					SendMessage(new DelegatePendingMessage(true, false, () => CreateAppDomain(vm.RootDomain, isNewAppDomainEvent: !processWasRunningOnAttach)));
 					// We need to add all threads even if it's an attach. Unity notifies us of all threads,
 					// except it sends the same thread N times in a row (N = number of threads).
 					foreach (var monoThread in vm.GetThreads()) {
-						SendMessage(new DelegatePendingMessage(true, () => CreateAppDomain(monoThread.Domain, isNewAppDomainEvent: !processWasRunningOnAttach)));
-						SendMessage(new DelegatePendingMessage(true, () => CreateModule(monoThread.Domain.Corlib.ManifestModule)));
-						SendMessage(new DelegatePendingMessage(true, () => CreateThread(monoThread)));
+						SendMessage(new DelegatePendingMessage(true, false, () => CreateAppDomain(monoThread.Domain, isNewAppDomainEvent: !processWasRunningOnAttach)));
+						SendMessage(new DelegatePendingMessage(true, false, () => CreateModule(monoThread.Domain.Corlib.ManifestModule)));
+						SendMessage(new DelegatePendingMessage(true, false, () => CreateThread(monoThread)));
 					}
 				}
 			}
@@ -1237,13 +1270,11 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 			if (!HasConnected_MonoDebugThread)
 				return;
 			try {
-				if (suspendCount == 0) {
-					vm.Suspend();
-					IncrementSuspendCount();
-				}
-				SendMessage(new DbgMessageBreak(GetThreadPreferMain_MonoDebug(), GetMessageFlags()));
-			}
-			catch (VMDisconnectedException) {
+				bool sendMsg = true;
+				if (suspendCount == 0)
+					sendMsg = IncrementAndSuspend();
+				if (sendMsg)
+					SendMessage(new DbgMessageBreak(GetThreadPreferMain_MonoDebug(), GetMessageFlags()));
 			}
 			catch (Exception ex) {
 				Debug.Fail(ex.Message);
@@ -1285,17 +1316,7 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl {
 			debuggerThread.VerifyAccess();
 			while (suspendCount > 0) {
 				thrownException = null;
-				ResumeVirtualMachine();
-				DecrementSuspendCount();
-			}
-		}
-
-		void ResumeVirtualMachine() {
-			debuggerThread.VerifyAccess();
-			try {
-				vm.Resume();
-			}
-			catch (VMNotSuspendedException) {
+				DecrementAndResume();
 			}
 		}
 

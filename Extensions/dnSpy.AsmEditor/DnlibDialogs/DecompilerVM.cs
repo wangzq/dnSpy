@@ -17,26 +17,13 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
-using dnSpy.Contracts.Debugger.Exceptions;
+using dnSpy.Contracts.Decompiler;
 using dnSpy.Contracts.MVVM;
 
-namespace dnSpy.Debugger.ToolWindows.Exceptions {
-	sealed class ExceptionCategoryVM : ViewModelBase {
-		public string DisplayName { get; }
-		public string ShortDisplayName { get; }
-		public DbgExceptionCategoryDefinition? Definition { get; }
-
-		public ExceptionCategoryVM(string displayName) {
-			Definition = null;
-			DisplayName = displayName ?? throw new ArgumentNullException(nameof(displayName));
-			ShortDisplayName = DisplayName;
-		}
-
-		public ExceptionCategoryVM(DbgExceptionCategoryDefinition definition) {
-			Definition = definition;
-			DisplayName = definition.DisplayName;
-			ShortDisplayName = definition.ShortDisplayName;
-		}
+namespace dnSpy.AsmEditor.DnlibDialogs {
+	sealed class DecompilerVM : ViewModelBase {
+		public IDecompiler Decompiler { get; }
+		public string UniqueNameUI => Decompiler.UniqueNameUI;
+		public DecompilerVM(IDecompiler decompiler) => Decompiler = decompiler;
 	}
 }

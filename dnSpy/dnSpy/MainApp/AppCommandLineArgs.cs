@@ -204,5 +204,19 @@ namespace dnSpy.MainApp {
 		}
 
 		public IEnumerable<Tuple<string, string>> GetArguments() => userArgs.Select(a => Tuple.Create(a.Key, a.Value));
+
+		internal void PatchFileNames(string[] existings) 
+		{
+			for(var i = 0; i < this.filenames.Count; i++) { 
+				if (!File.Exists(this.filenames[i])) {
+					var existing = existings.FirstOrDefault(x => SameFileName(x, this.filenames[i]));
+					if (existing != null) {
+						this.filenames[i] = existing;	
+					}
+				}
+			}
+		}
+
+		private static bool SameFileName(string a, string b) => Path.GetFileName(a).Equals(Path.GetFileName(b), StringComparison.OrdinalIgnoreCase);
 	}
 }

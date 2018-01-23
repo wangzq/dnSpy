@@ -560,6 +560,10 @@ namespace dnSpy.MainApp {
 			if (appArgs.NewTab)
 				exportProvider.GetExportedValue<IDocumentTabService>().OpenEmptyTab();
 
+			var docService = exportProvider.GetExportedValue<IDocumentTabService>();
+			var loadedFileNames = docService.DocumentTreeView.DocumentService.GetDocuments().Select(x => x.Filename).ToArray();
+			((AppCommandLineArgs)appArgs).PatchFileNames(loadedFileNames);
+
 			var files = appArgs.Filenames.ToArray();
 			if (files.Length > 0)
 				OpenDocumentsHelper.OpenDocuments(exportProvider.GetExportedValue<IDocumentTabService>().DocumentTreeView, appWindow.MainWindow, files, false);

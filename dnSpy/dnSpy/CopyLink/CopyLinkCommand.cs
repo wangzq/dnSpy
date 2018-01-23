@@ -11,9 +11,9 @@ using dnSpy.Contracts.Menus;
 using dnSpy.Contracts.TreeView;
 
 namespace dnSpy.Documents.Tabs {
-	static class CopyXmlDocKeyCommand
+	static class CopyLinkCommand
     {
-		const string Header = "Copy XmlDoc Key";
+		const string Header = "Copy Link";
 
 		static void ExecuteInternal(IMemberDef memberDef) {
 			if (memberDef != null) {
@@ -22,7 +22,7 @@ namespace dnSpy.Documents.Tabs {
 				var xmlDocId = XmlDocKeyProvider.GetKey(memberDef, new StringBuilder()).ToString();
 				// This will require a custom protocol handler I wrote to invoke dnspy with the assembly path and selects the xmldocid.
 				var fullcmd = $"\"{location}\" --select \"{xmlDocId}\"";
-				var text = $"my://dnspy/{HttpUtility.UrlEncode(fullcmd)}";
+				var text = $"dnspy://{HttpUtility.UrlEncode(fullcmd)}";
 				var html = $"<a href=\"{text}\">{memberDef.Name}</a>";
 				try {
 					HtmlClipboard.Set(html, text);

@@ -54,6 +54,7 @@ namespace dnSpy.MainApp {
 		}
 
 		public AppCommandLineArgs(string[] args) {
+			CustomProtcolHelper.RegisterThisAssembly("dnspy");
 			args = LinkParser.CheckArgs(args);
 
 			SettingsFilename = null;

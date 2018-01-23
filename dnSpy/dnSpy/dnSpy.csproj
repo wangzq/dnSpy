@@ -160,7 +160,9 @@
     <Compile Include="Controls\WpfFocusService.cs" />
     <Compile Include="Controls\ZoomSelector.cs" />
     <Compile Include="CopyLink\CommandLineHelper.cs" />
+    <Compile Include="CopyLink\CustomProtcolHelper.cs" />
     <Compile Include="CopyLink\LinkParser.cs" />
+    <Compile Include="CopyLink\RegMerger.cs" />
     <Compile Include="Culture\Commands.cs" />
     <Compile Include="Culture\CultureService.cs" />
     <Compile Include="Culture\CultureSettings.cs" />
@@ -187,7 +189,7 @@
     <Compile Include="Documents\Tabs\AsyncShowResult.cs" />
     <Compile Include="Documents\Tabs\Commands.cs" />
     <Compile Include="Documents\Tabs\CopyTokenCommand.cs" />
-    <Compile Include="Documents\Tabs\CopyXmlDocKeyCommand.cs" />
+    <Compile Include="CopyLink\CopyLinkCommand.cs" />
     <Compile Include="Documents\Tabs\DecompilationCache.cs" />
     <Compile Include="Documents\Tabs\DefaultDecompileNode.cs" />
     <Compile Include="Documents\Tabs\DefaultDocumentList.cs" />
@@ -854,7 +856,7 @@
     <Compile Include="Settings\XmlSettingsReader.cs" />
     <Compile Include="Settings\XmlSettingsWriter.cs" />
     <Compile Include="Settings\XmlUtils.cs" />
-    <Compile Include="Tabs\TabContentExtensions.cs" />
+    <Compile Include="CopyLink\TabContentExtensions.cs" />
     <Compile Include="Tabs\TabElementZoomer.cs" />
     <Compile Include="Tabs\TabGroup.cs" />
     <Compile Include="Tabs\TabGroupService.cs" />

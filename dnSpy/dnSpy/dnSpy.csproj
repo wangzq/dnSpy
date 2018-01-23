@@ -159,6 +159,8 @@
     <Compile Include="Controls\WpfCommandService.cs" />
     <Compile Include="Controls\WpfFocusService.cs" />
     <Compile Include="Controls\ZoomSelector.cs" />
+    <Compile Include="CopyLink\CommandLineHelper.cs" />
+    <Compile Include="CopyLink\LinkParser.cs" />
     <Compile Include="Culture\Commands.cs" />
     <Compile Include="Culture\CultureService.cs" />
     <Compile Include="Culture\CultureSettings.cs" />

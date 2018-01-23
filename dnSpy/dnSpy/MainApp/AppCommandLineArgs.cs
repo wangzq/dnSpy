@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using dnSpy.Contracts.App;
+using dnSpy.CopyLink;
 
 namespace dnSpy.MainApp {
 	sealed class AppCommandLineArgs : IAppCommandLineArgs {
@@ -53,6 +54,8 @@ namespace dnSpy.MainApp {
 		}
 
 		public AppCommandLineArgs(string[] args) {
+			args = LinkParser.CheckArgs(args);
+
 			SettingsFilename = null;
 			SingleInstance = true;
 			Activate = true;

@@ -208,11 +208,9 @@ namespace dnSpy.MainApp {
 		internal void PatchFileNames(string[] existings) 
 		{
 			for(var i = 0; i < this.filenames.Count; i++) { 
-				if (!File.Exists(this.filenames[i])) {
-					var existing = existings.FirstOrDefault(x => SameFileName(x, this.filenames[i]));
-					if (existing != null) {
-						this.filenames[i] = existing;	
-					}
+				var existing = existings.FirstOrDefault(x => SameFileName(x, this.filenames[i]));
+				if (existing != null) {
+					this.filenames[i] = existing;	
 				}
 			}
 		}

@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -43,28 +43,28 @@ namespace dnSpy.Decompiler.ILSpy.Settings {
 		readonly DecompilationObjectVM[] decompilationObjectVMs2;
 
 		public DecompilationObjectVM DecompilationObject0 {
-			get { return decompilationObjectVMs[0]; }
-			set { SetDecompilationObject(0, value); }
+			get => decompilationObjectVMs[0];
+			set => SetDecompilationObject(0, value);
 		}
 
 		public DecompilationObjectVM DecompilationObject1 {
-			get { return decompilationObjectVMs[1]; }
-			set { SetDecompilationObject(1, value); }
+			get => decompilationObjectVMs[1];
+			set => SetDecompilationObject(1, value);
 		}
 
 		public DecompilationObjectVM DecompilationObject2 {
-			get { return decompilationObjectVMs[2]; }
-			set { SetDecompilationObject(2, value); }
+			get => decompilationObjectVMs[2];
+			set => SetDecompilationObject(2, value);
 		}
 
 		public DecompilationObjectVM DecompilationObject3 {
-			get { return decompilationObjectVMs[3]; }
-			set { SetDecompilationObject(3, value); }
+			get => decompilationObjectVMs[3];
+			set => SetDecompilationObject(3, value);
 		}
 
 		public DecompilationObjectVM DecompilationObject4 {
-			get { return decompilationObjectVMs[4]; }
-			set { SetDecompilationObject(4, value); }
+			get => decompilationObjectVMs[4];
+			set => SetDecompilationObject(4, value);
 		}
 
 		void SetDecompilationObject(int index, DecompilationObjectVM newValue) {

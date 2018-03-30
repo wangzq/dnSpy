@@ -1919,4 +1919,7 @@
   <data name="User_Administrator" xml:space="preserve">
     <value>Администратор</value>
   </data>
+  <data name="AllowMoreThanOneInstance" xml:space="preserve">
+    <value>Разрешить более одного экземпляра (требуется перезапуск)</value>
+  </data>
 </root>

@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -23,7 +23,7 @@ using dnSpy.Contracts.Text;
 namespace dnSpy.Debugger.DotNet.Exceptions {
 	[ExportDbgExceptionFormatter(PredefinedExceptionCategories.DotNet)]
 	sealed class CLRDbgExceptionFormatter : DbgExceptionFormatter {
-		public override bool WriteName(ITextColorWriter writer, DbgExceptionDefinition definition) {
+		public override bool WriteName(ITextColorWriter writer, in DbgExceptionDefinition definition) {
 			var fullName = definition.Id.Name;
 			if (!string.IsNullOrEmpty(fullName)) {
 				var nsParts = fullName.Split(nsSeps);

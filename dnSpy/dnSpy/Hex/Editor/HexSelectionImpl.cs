@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -35,12 +35,12 @@ namespace dnSpy.Hex.Editor {
 		public override event EventHandler SelectionChanged;
 
 		public override bool IsActive {
-			get { return hexSelectionLayer.IsActive; }
-			set { hexSelectionLayer.IsActive = value; }
+			get => hexSelectionLayer.IsActive;
+			set => hexSelectionLayer.IsActive = value;
 		}
 
 		public override bool ActivationTracksFocus {
-			get { return activationTracksFocus; }
+			get => activationTracksFocus;
 			set {
 				if (activationTracksFocus == value)
 					return;
@@ -80,7 +80,7 @@ namespace dnSpy.Hex.Editor {
 				Select(newAnchorPoint, newActivePoint, alignPoints: true);
 		}
 
-		HexBufferPoint Filter(HexBufferPoint position) {
+		HexBufferPoint Filter(in HexBufferPoint position) {
 			if (position < HexView.BufferLines.BufferStart)
 				return HexView.BufferLines.BufferStart;
 			if (position > HexView.BufferLines.BufferEnd)
@@ -167,7 +167,7 @@ namespace dnSpy.Hex.Editor {
 			}
 		}
 
-		static HexCell GetCell(HexBufferLineFormatter bufferLines, HexBufferPoint position) {
+		static HexCell GetCell(HexBufferLineFormatter bufferLines, in HexBufferPoint position) {
 			var line = bufferLines.GetLineFromPosition(position);
 			var cell = line.ValueCells.GetCell(position);
 			if (cell == null && position == line.BufferEnd && position > line.BufferStart)

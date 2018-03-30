@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -150,7 +150,7 @@ namespace dnSpy.Decompiler.MSBuild {
 				writer.WriteEndElement();
 
 				// GAC references
-				var gacRefs = project.Module.GetAssemblyRefs().Where(a => a.Name != "mscorlib").ToArray();
+				var gacRefs = project.Module.GetAssemblyRefs().Where(a => a.Name != "mscorlib").OrderBy(a => a.Name.String, StringComparer.OrdinalIgnoreCase).ToArray();
 				if (gacRefs.Length > 0 || project.ExtraAssemblyReferences.Count > 0) {
 					writer.WriteStartElement("ItemGroup");
 					var hash = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -190,7 +190,7 @@ namespace dnSpy.Decompiler.MSBuild {
 				var projRefs = project.Module.GetAssemblyRefs().
 					Select(a => project.Module.Context.AssemblyResolver.Resolve(a, project.Module)).
 					Select(a => a == null ? null : FindOtherProject(a.ManifestModule.Location)).
-					Where(a => a != null).ToArray();
+					Where(a => a != null).OrderBy(a => a.Filename, StringComparer.OrdinalIgnoreCase).ToArray();
 				if (projRefs.Length > 0) {
 					writer.WriteStartElement("ItemGroup");
 					foreach (var otherProj in projRefs) {
@@ -357,7 +357,7 @@ namespace dnSpy.Decompiler.MSBuild {
 
 		string GetFileAlignment() {
 			if (project.Module is ModuleDefMD mod)
-				return mod.MetaData.PEImage.ImageNTHeaders.OptionalHeader.FileAlignment.ToString();
+				return mod.Metadata.PEImage.ImageNTHeaders.OptionalHeader.FileAlignment.ToString();
 			return "512";
 		}
 

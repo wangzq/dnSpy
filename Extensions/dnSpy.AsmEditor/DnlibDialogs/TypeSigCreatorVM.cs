@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -18,14 +18,12 @@
 */
 
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
 using dnlib.DotNet;
 using dnSpy.AsmEditor.Properties;
 using dnSpy.AsmEditor.ViewHelpers;
-using dnSpy.Contracts.Decompiler;
 using dnSpy.Contracts.MVVM;
 using dnSpy.Contracts.Search;
 using dnSpy.Contracts.Text;
@@ -61,7 +59,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 		}
 
 		public bool IsEnabled {
-			get { return isEnabled; }
+			get => isEnabled;
 			set {
 				if (isEnabled != value) {
 					isEnabled = value;
@@ -75,7 +73,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 		bool isEnabled = true;
 
 		public TypeSig TypeSig {
-			get { return typeSig; }
+			get => typeSig;
 			set {
 				if (typeSig != value) {
 					bool nullChange = typeSig == null || value == null;
@@ -100,7 +98,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 		public bool CanShowTypeFullName => ShowTypeFullName && IsValidTypeSig;
 
 		public bool ShowTypeFullName {
-			get { return showTypeFullName; }
+			get => showTypeFullName;
 			set {
 				if (showTypeFullName != value) {
 					showTypeFullName = value;
@@ -148,7 +146,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 		readonly ObservableCollection<DecompilerVM> allDecompilers;
 
 		public DecompilerVM Language {
-			get { return allDecompilers.FirstOrDefault(a => a.Decompiler == options.Decompiler); }
+			get => allDecompilers.FirstOrDefault(a => a.Decompiler == options.Decompiler);
 			set {
 				if (options.Decompiler != value.Decompiler) {
 					options.Decompiler = value.Decompiler;
@@ -250,7 +248,7 @@ namespace dnSpy.AsmEditor.DnlibDialogs {
 		bool AddFnPtrSigCanExecute() => CanAddFnPtr && CanAddLeafTypeSig;
 
 		public bool CanAddFnPtr {
-			get { return canAddFnPtr; }
+			get => canAddFnPtr;
 			set {
 				if (canAddFnPtr != value) {
 					canAddFnPtr = value;

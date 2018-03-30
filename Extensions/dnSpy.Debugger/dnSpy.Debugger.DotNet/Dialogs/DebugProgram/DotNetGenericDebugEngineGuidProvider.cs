@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -28,6 +28,8 @@ namespace dnSpy.Debugger.DotNet.Dialogs.DebugProgram {
 	sealed class DotNetGenericDebugEngineGuidProvider : GenericDebugEngineGuidProvider {
 		public override Guid? GetEngineGuid(string filename) {
 			if (!File.Exists(filename))
+				return null;
+			if (!PortableExecutableFileHelpers.IsExecutable(filename))
 				return null;
 			try {
 				using (var peImage = new PEImage(filename)) {

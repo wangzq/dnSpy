@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -26,7 +26,7 @@ using dnSpy.Contracts.Debugger.Breakpoints.Code.FilterExpressionEvaluator;
 
 namespace dnSpy.Debugger.Breakpoints.Code.CondChecker {
 	abstract class DbgCodeBreakpointFilterChecker {
-		public abstract DbgCodeBreakpointCheckResult ShouldBreak(DbgBoundCodeBreakpoint boundBreakpoint, DbgThread thread, DbgCodeBreakpointFilter filter);
+		public abstract DbgCodeBreakpointCheckResult ShouldBreak(DbgBoundCodeBreakpoint boundBreakpoint, DbgThread thread, in DbgCodeBreakpointFilter filter);
 	}
 
 	[Export(typeof(DbgCodeBreakpointFilterChecker))]
@@ -42,7 +42,7 @@ namespace dnSpy.Debugger.Breakpoints.Code.CondChecker {
 
 		sealed class DbgFilterEEVariableProviderImpl : DbgFilterEEVariableProvider {
 			public override string MachineName => Environment.MachineName;
-			public override ulong ProcessId => (uint)process.Id;
+			public override int ProcessId => process.Id;
 			public override string ProcessName => process.Filename;
 			public override ulong ThreadId => thread?.Id ?? ulong.MaxValue;
 			public override string ThreadName => thread?.UIName;
@@ -61,7 +61,7 @@ namespace dnSpy.Debugger.Breakpoints.Code.CondChecker {
 			}
 		}
 
-		public override DbgCodeBreakpointCheckResult ShouldBreak(DbgBoundCodeBreakpoint boundBreakpoint, DbgThread thread, DbgCodeBreakpointFilter filter) {
+		public override DbgCodeBreakpointCheckResult ShouldBreak(DbgBoundCodeBreakpoint boundBreakpoint, DbgThread thread, in DbgCodeBreakpointFilter filter) {
 			if (!dbgFilterExpressionEvaluatorService.HasExpressionEvaluator) {
 				// There's no need to localize it, the FEE is exported by the Roslyn code
 				return new DbgCodeBreakpointCheckResult("There's no filter expression evaluator");

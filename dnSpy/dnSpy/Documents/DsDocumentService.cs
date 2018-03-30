@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -38,7 +38,7 @@ namespace dnSpy.Documents {
 		readonly IDsDocumentProvider[] documentProviders;
 
 		// PERF: Must be a struct; class is 9% slower (decompile mscorlib+dnSpy = 83 files)
-		struct DocumentInfo {
+		readonly struct DocumentInfo {
 			readonly List<AssemblyRef> alternativeAssemblyNames;
 			public readonly IDsDocument Document;
 

@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -57,8 +57,8 @@ namespace dnSpy.AsmEditor.Commands {
 			public bool CanExecute(object parameter) => cmd.CanExecute(owner.GetSelectedItems());
 
 			public event EventHandler CanExecuteChanged {
-				add { CommandManager.RequerySuggested += value; }
-				remove { CommandManager.RequerySuggested -= value; }
+				add => CommandManager.RequerySuggested += value;
+				remove => CommandManager.RequerySuggested -= value;
 			}
 
 			public void Execute(object parameter) => cmd.Execute(owner.GetSelectedItems());
@@ -79,7 +79,7 @@ namespace dnSpy.AsmEditor.Commands {
 		protected void AddSeparator() => contextMenuHandlers.Add(null);
 		protected void Add(ContextMenuHandler handler) => contextMenuHandlers.Add(handler);
 
-		protected void AddStandardMenuHandlers(ImageReference? addNewItemIcon = null) {
+		protected void AddStandardMenuHandlers(in ImageReference? addNewItemIcon = null) {
 			AddAddNewItemHandlers(addNewItemIcon);
 			AddSeparator();
 			AddMoveItemHandlers();
@@ -96,7 +96,7 @@ namespace dnSpy.AsmEditor.Commands {
 		protected abstract string RemovePluralMessage { get; }
 		protected abstract string RemoveAllMessage { get; }
 
-		protected void AddAddNewItemHandlers(ImageReference? addNewItemIcon = null) {
+		protected void AddAddNewItemHandlers(in ImageReference? addNewItemIcon = null) {
 			if (!coll.CanCreateNewItems)
 				return;
 			Add(new ContextMenuHandler {
@@ -257,7 +257,7 @@ namespace dnSpy.AsmEditor.Commands {
 			}
 		}
 
-		protected static void Add16x16Image(MenuItem menuItem, ImageReference imageReference, bool? enable = null) {
+		protected static void Add16x16Image(MenuItem menuItem, in ImageReference imageReference, bool? enable = null) {
 			var image = new DsImage { ImageReference = imageReference };
 			menuItem.Icon = image;
 			if (enable == false)

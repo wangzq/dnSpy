@@ -333,8 +333,8 @@
     <value>Не могу вычислить пока появляется необработанное исключение</value>
   </data>
   <data name="Error_StartWithoutDebuggingCouldNotStart" xml:space="preserve">
-    <value>Could not start '{0}'
-ERROR: {1}</value>
+    <value>Не могу запустить '{0}'
+ОШИБКА: {1}</value>
   </data>
   <data name="ExceptionSettingsCommand" xml:space="preserve">
     <value>Настройки и_сключений</value>
@@ -1468,9 +1468,33 @@ ERROR: {1}</value>
     <value>Установить фокус на отлаживаемый процесс</value>
   </data>
   <data name="LoadAllModulesCommand" xml:space="preserve">
-    <value>Open All Modules</value>
+    <value>Открыть все модули</value>
   </data>
   <data name="DbgSettings_HideDeprecatedError" xml:space="preserve">
-    <value>Hide deprecated members in variables windows</value>
+    <value>Скрыть deprecated члены в окнах переменных</value>
+  </data>
+  <data name="DbgSettings_ShowReturnValues" xml:space="preserve">
+    <value>Показать возвращаемые значения</value>
+  </data>
+  <data name="DbgSettings_RedirectGuiConsoleOutput" xml:space="preserve">
+    <value>Перенаправить вывод консоли GUI-приложений в Окно вывода</value>
+  </data>
+  <data name="AttachToProcess_MakingAnImageEasierToDebug" xml:space="preserve">
+    <value>Как сделать образ легче отлаживаемым</value>
+  </data>
+  <data name="ShowOnlyPublicMembersCommand" xml:space="preserve">
+    <value>Открытые члены</value>
+  </data>
+  <data name="DbgSettings_ShowRawLocals" xml:space="preserve">
+    <value>Показать сырые локальные переменные</value>
+  </data>
+  <data name="DbgSettings_AsyncDebugging" xml:space="preserve">
+    <value>Включить асинх. отладку</value>
+  </data>
+  <data name="DbgSettings_StepOverPropertiesAndOperators" xml:space="preserve">
+    <value>Обход свойств и операторов</value>
+  </data>
+  <data name="CopyExpressionCommand" xml:space="preserve">
+    <value>Копировать и_сключение</value>
   </data>
 </root>

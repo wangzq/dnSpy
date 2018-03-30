@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -28,7 +28,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		/// <summary>
 		/// Dummy abstract method to make sure no-one outside this assembly can create their own <see cref="DmdAppDomain"/>
 		/// </summary>
-		internal abstract void YouCantDeriveFromThisClass();
+		private protected abstract void YouCantDeriveFromThisClass();
 
 		/// <summary>
 		/// Gets the runtime
@@ -86,7 +86,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		/// <param name="getMetadata">Called to provide the metadata</param>
 		/// <param name="assemblyInfo">Assembly info</param>
 		/// <returns></returns>
-		public abstract DmdAssembly CreateAssembly(Func<DmdLazyMetadataBytes> getMetadata, DmdCreateAssemblyInfo assemblyInfo);
+		public abstract DmdAssembly CreateAssembly(Func<DmdLazyMetadataBytes> getMetadata, in DmdCreateAssemblyInfo assemblyInfo);
 
 		/// <summary>
 		/// Creates an assembly. The first created assembly must be the corlib (<see cref="DmdAppDomain.CorLib"/>)
@@ -257,7 +257,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		/// <summary>
 		/// Adds and removes an assembly
 		/// </summary>
-		public struct TemporaryAssemblyDisposable : IDisposable {
+		public readonly struct TemporaryAssemblyDisposable : IDisposable {
 			readonly DmdAssembly assembly;
 			internal TemporaryAssemblyDisposable(DmdAssembly assembly) {
 				this.assembly = assembly ?? throw new ArgumentNullException(nameof(assembly));
@@ -685,7 +685,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 		Synthetic			= 0x00000004,
 
 		/// <summary>
-		/// Don't add the assembly to the app domain
+		/// Don't add the assembly to the AppDomain
 		/// </summary>
 		DontAddAssembly		= 0x00000008,
 
@@ -703,7 +703,7 @@ namespace dnSpy.Debugger.DotNet.Metadata {
 	/// <summary>
 	/// Info needed when creating an assembly
 	/// </summary>
-	public struct DmdCreateAssemblyInfo {
+	public readonly struct DmdCreateAssemblyInfo {
 		/// <summary>
 		/// Gets the options
 		/// </summary>

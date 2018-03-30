@@ -333,8 +333,7 @@
     <value>No se puede evaluar cuando ha ocurrido una excepción no controlada</value>
   </data>
   <data name="Error_StartWithoutDebuggingCouldNotStart" xml:space="preserve">
-    <value>Could not start '{0}'
-ERROR: {1}</value>
+    <value>No se pudo iniciar '{0}' ERROR: {1}</value>
   </data>
   <data name="ExceptionSettingsCommand" xml:space="preserve">
     <value>Configuración de E_xcepción</value>
@@ -1382,7 +1381,7 @@ ERROR: {1}</value>
     <value>&lt; desconocido &gt;</value>
   </data>
   <data name="Refresh" xml:space="preserve">
-    <value>Refrescar</value>
+    <value>Refresco</value>
   </data>
   <data name="DbgSettings_GroupParametersAndLocalsTogether" xml:space="preserve">
     <value>Agrupar parámetros y locales</value>
@@ -1466,9 +1465,33 @@ ERROR: {1}</value>
     <value>Proporcionar enfoque al proceso de depurado</value>
   </data>
   <data name="LoadAllModulesCommand" xml:space="preserve">
-    <value>Open All Modules</value>
+    <value>Abrir todos los módulos</value>
   </data>
   <data name="DbgSettings_HideDeprecatedError" xml:space="preserve">
-    <value>Hide deprecated members in variables windows</value>
+    <value>Ocultar los miembros obsoletos en variables windiws</value>
+  </data>
+  <data name="DbgSettings_ShowReturnValues" xml:space="preserve">
+    <value>Mostar valores devueltos</value>
+  </data>
+  <data name="DbgSettings_RedirectGuiConsoleOutput" xml:space="preserve">
+    <value>Redirigir la salida de la consola de aplicaciones GUI para la ventana de salida</value>
+  </data>
+  <data name="AttachToProcess_MakingAnImageEasierToDebug" xml:space="preserve">
+    <value>Hacer una imagen más fácil de depurar</value>
+  </data>
+  <data name="ShowOnlyPublicMembersCommand" xml:space="preserve">
+    <value>Miembros públicos</value>
+  </data>
+  <data name="DbgSettings_ShowRawLocals" xml:space="preserve">
+    <value>Mostrar primarios locales</value>
+  </data>
+  <data name="DbgSettings_AsyncDebugging" xml:space="preserve">
+    <value>Habilitar la depuración asincrónica de código fuente</value>
+  </data>
+  <data name="DbgSettings_StepOverPropertiesAndOperators" xml:space="preserve">
+    <value>Paso sobre propiedades y operadores</value>
+  </data>
+  <data name="CopyExpressionCommand" xml:space="preserve">
+    <value>E_xpresión copia</value>
   </data>
 </root>

@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -252,7 +252,7 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 
 		// random thread
 		DbgValueFormatterOptions GetValueFormatterOptions() {
-			var options = DbgValueFormatterOptions.Display;
+			var options = DbgValueFormatterOptions.None;
 
 			if (!debuggerSettings.UseHexadecimal)					options |= DbgValueFormatterOptions.Decimal;
 			// We don't enable func-eval since each func-eval will invalidate all stack frames
@@ -364,7 +364,7 @@ namespace dnSpy.Debugger.ToolWindows.CallStack {
 		}
 
 		// UI thread
-		void UpdateFrames_UI(DbgCallStackFramesInfo framesInfo, DbgThread thread) {
+		void UpdateFrames_UI(in DbgCallStackFramesInfo framesInfo, DbgThread thread) {
 			callStackContext.UIDispatcher.VerifyAccess();
 
 			ClearUsedBreakpoints_UI();

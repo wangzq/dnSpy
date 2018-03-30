@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -17,7 +17,6 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-using System;
 using dnSpy.Contracts.Decompiler;
 using dnSpy.Contracts.Documents.Tabs.DocViewer;
 using dnSpy.Contracts.Documents.Tabs.DocViewer.ToolTips;
@@ -37,12 +36,6 @@ namespace dnSpy.Contracts.Documents.Tabs {
 		/// Order of hex editor <see cref="IDocumentTabContentFactory"/> instance
 		/// </summary>
 		public const double ORDER_ASMED_HEXVIEWDOCUMENTTABCONTENTFACTORY = 11000;
-
-		/// <summary>
-		/// Order of hex editor <see cref="IDocumentTabContentFactory"/> instance
-		/// </summary>
-		[Obsolete("Use " + nameof(ORDER_ASMED_HEXVIEWDOCUMENTTABCONTENTFACTORY), true)]
-		public const double ORDER_HEXBOXDOCUMENTTABCONTENTFACTORY = 11000;
 
 		/// <summary>
 		/// Order of decompile <see cref="IDocumentTabContentFactory"/> instance

@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -54,7 +54,7 @@ namespace dnSpy.Language.Intellisense {
 			imageMonikerId = 1;
 		}
 
-		public ImageMoniker ToImageMoniker(ImageReference imageReference) {
+		public ImageMoniker ToImageMoniker(in ImageReference imageReference) {
 			if (imageReference.IsDefault)
 				return default;
 			lock (lockObj) {
@@ -69,7 +69,7 @@ namespace dnSpy.Language.Intellisense {
 			}
 		}
 
-		public ImageReference ToImageReference(ImageMoniker imageMoniker) {
+		public ImageReference ToImageReference(in ImageMoniker imageMoniker) {
 			if (imageMoniker.Id == 0 && imageMoniker.Guid == Guid.Empty)
 				return default;
 			lock (lockObj) {

@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -42,7 +42,7 @@ namespace dnSpy.Debugger.Steppers {
 
 		readonly object lockObj;
 		readonly DbgManagerImpl dbgManager;
-		readonly DbgThreadImpl thread;
+		DbgThreadImpl thread;
 		readonly DbgEngineStepper engineStepper;
 		object stepperTag;
 		bool closeWhenStepComplete;
@@ -52,20 +52,22 @@ namespace dnSpy.Debugger.Steppers {
 			this.dbgManager = dbgManager ?? throw new ArgumentNullException(nameof(dbgManager));
 			this.thread = thread ?? throw new ArgumentNullException(nameof(thread));
 			this.engineStepper = engineStepper ?? throw new ArgumentNullException(nameof(engineStepper));
-			thread.AddAutoClose(this);
 			engineStepper.StepComplete += DbgEngineStepper_StepComplete;
 		}
 
 		void DbgEngineStepper_StepComplete(object sender, DbgEngineStepCompleteEventArgs e) =>
 			Dispatcher.BeginInvoke(() => DbgEngineStepper_StepComplete_DbgThread(e));
 
-		void DbgEngineStepper_StepComplete_DbgThread(DbgEngineStepCompleteEventArgs e) {
+		void DbgEngineStepper_StepComplete_DbgThread(in DbgEngineStepCompleteEventArgs e) {
 			Dispatcher.VerifyAccess();
 			bool wasStepping;
 			lock (lockObj) {
 				wasStepping = stepperTag != null && stepperTag == e.Tag;
 				stepperTag = null;
+				thread = (DbgThreadImpl)e.Thread ?? thread;
 			}
+			if (IsClosed)
+				return;
 			var stepThread = (DbgThreadImpl)e.Thread ?? thread;
 			dbgManager.StepComplete_DbgThread(stepThread, e.Error, e.ForciblyCanceled);
 			if (wasStepping)
@@ -172,7 +174,6 @@ namespace dnSpy.Debugger.Steppers {
 		public override void Close() => Thread.Process.DbgManager.Close(this);
 
 		protected override void CloseCore(DbgDispatcher dispatcher) {
-			thread.RemoveAutoClose(this);
 			engineStepper.StepComplete -= DbgEngineStepper_StepComplete;
 			engineStepper.Close(dispatcher);
 		}

@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -47,8 +47,8 @@ namespace dnSpy.AsmEditor.Compiler {
 				this.editCodeVMCreator = editCodeVMCreator;
 			}
 
-			public override ImageReference? GetIcon(AsmEditorContext context) => editCodeVMCreator.GetIcon(CompilationKind.Assembly);
-			public override string GetHeader(AsmEditorContext context) => editCodeVMCreator.GetHeader(CompilationKind.Assembly);
+			public override ImageReference? GetIcon(AsmEditorContext context) => editCodeVMCreator.GetIcon(CompilationKind.EditAssembly);
+			public override string GetHeader(AsmEditorContext context) => editCodeVMCreator.GetHeader(CompilationKind.EditAssembly);
 			public override bool IsVisible(AsmEditorContext context) => EditAssemblyCommand.CanExecute(editCodeVMCreator, context.Nodes);
 			public override void Execute(AsmEditorContext context) => EditAssemblyCommand.Execute(editCodeVMCreator, addUpdatedNodesHelperProvider, undoCommandService, appService, context.Nodes);
 		}
@@ -69,8 +69,8 @@ namespace dnSpy.AsmEditor.Compiler {
 				this.editCodeVMCreator = editCodeVMCreator;
 			}
 
-			public override ImageReference? GetIcon(AsmEditorContext context) => editCodeVMCreator.GetIcon(CompilationKind.Assembly);
-			public override string GetHeader(AsmEditorContext context) => editCodeVMCreator.GetHeader(CompilationKind.Assembly);
+			public override ImageReference? GetIcon(AsmEditorContext context) => editCodeVMCreator.GetIcon(CompilationKind.EditAssembly);
+			public override string GetHeader(AsmEditorContext context) => editCodeVMCreator.GetHeader(CompilationKind.EditAssembly);
 			public override bool IsVisible(AsmEditorContext context) => EditAssemblyCommand.CanExecute(editCodeVMCreator, context.Nodes);
 			public override void Execute(AsmEditorContext context) => EditAssemblyCommand.Execute(editCodeVMCreator, addUpdatedNodesHelperProvider, undoCommandService, appService, context.Nodes);
 		}
@@ -91,14 +91,14 @@ namespace dnSpy.AsmEditor.Compiler {
 				this.editCodeVMCreator = editCodeVMCreator;
 			}
 
-			public override ImageReference? GetIcon(CodeContext context) => editCodeVMCreator.GetIcon(CompilationKind.Assembly);
-			public override string GetHeader(CodeContext context) => editCodeVMCreator.GetHeader(CompilationKind.Assembly);
+			public override ImageReference? GetIcon(CodeContext context) => editCodeVMCreator.GetIcon(CompilationKind.EditAssembly);
+			public override string GetHeader(CodeContext context) => editCodeVMCreator.GetHeader(CompilationKind.EditAssembly);
 			public override bool IsEnabled(CodeContext context) => EditAssemblyCommand.CanExecute(editCodeVMCreator, context.Nodes);
 			public override void Execute(CodeContext context) => EditAssemblyCommand.Execute(editCodeVMCreator, addUpdatedNodesHelperProvider, undoCommandService, appService, context.Nodes);
 		}
 
 		static bool CanExecute(EditCodeVMCreator editCodeVMCreator, DocumentTreeNodeData[] nodes) =>
-			editCodeVMCreator.CanCreate(CompilationKind.Assembly) && nodes.Length == 1 && (nodes[0] is AssemblyDocumentNode || nodes[0] is ModuleDocumentNode);
+			editCodeVMCreator.CanCreate(CompilationKind.EditAssembly) && nodes.Length == 1 && (nodes[0] is AssemblyDocumentNode || nodes[0] is ModuleDocumentNode);
 
 		static void Execute(EditCodeVMCreator editCodeVMCreator, Lazy<IAddUpdatedNodesHelperProvider> addUpdatedNodesHelperProvider, Lazy<IUndoCommandService> undoCommandService, IAppService appService, DocumentTreeNodeData[] nodes) {
 			if (!CanExecute(editCodeVMCreator, nodes))
@@ -129,7 +129,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			var win = new EditCodeDlg();
 			win.DataContext = vm;
 			win.Owner = appService.MainWindow;
-			win.Title = string.Format("{0} - {1}", dnSpy_AsmEditor_Resources.EditAssemblyCode, asmNode?.ToString() ?? modNode.ToString());
+			win.Title = $"{dnSpy_AsmEditor_Resources.EditAssemblyCode} - {asmNode?.ToString() ?? modNode.ToString()}";
 
 			if (win.ShowDialog() != true) {
 				vm.Dispose();

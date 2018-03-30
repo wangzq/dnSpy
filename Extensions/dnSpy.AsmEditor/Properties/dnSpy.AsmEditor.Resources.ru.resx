@@ -1733,10 +1733,10 @@
     <value>Сохранить {0} ресурсов, используя поддиректории</value>
   </data>
   <data name="RedoCommand" xml:space="preserve">
-    <value>Отменить</value>
+    <value>Повторить</value>
   </data>
   <data name="RedoToolBarToolTip" xml:space="preserve">
-    <value>Отменить</value>
+    <value>Повторить</value>
   </data>
   <data name="RemoveAndAddPopsCommand" xml:space="preserve">
     <value>Убрать и добавить Pops</value>
@@ -2406,10 +2406,10 @@
     <value>Предупреждение</value>
   </data>
   <data name="AddAssemblyReferenceToolTip" xml:space="preserve">
-    <value>Добавить ссылку на сборку (Ctrl+O)</value>
+    <value>Добавление ссылки на сборку</value>
   </data>
   <data name="AddGacReferenceToolTip" xml:space="preserve">
-    <value>Добавить ссылку на сборку (GAC) (Ctrl+Shift+O)</value>
+    <value>Добавление ссылки на сборку (GAC)</value>
   </data>
   <data name="Error_CouldNotAddAssemblyReferences" xml:space="preserve">
     <value>Не могу добавить ссылки на сборку.</value>
@@ -2500,5 +2500,26 @@
   </data>
   <data name="ParamDef_Flags_Retval" xml:space="preserve">
     <value>Retval</value>
+  </data>
+  <data name="AddDocumentsToolTip" xml:space="preserve">
+    <value>Добавление исходного кода</value>
+  </data>
+  <data name="ShortCutKeyCtrlO" xml:space="preserve">
+    <value>Ctrl+O</value>
+  </data>
+  <data name="ShortCutKeyCtrlShiftA" xml:space="preserve">
+    <value>Ctrl+Shift+A</value>
+  </data>
+  <data name="ShortCutKeyCtrlShiftO" xml:space="preserve">
+    <value>Ctrl+Shift+O</value>
+  </data>
+  <data name="EditCodeAddClassMembers" xml:space="preserve">
+    <value>Добавить члены класса</value>
+  </data>
+  <data name="EditCodeAddClassMembers2" xml:space="preserve">
+    <value>Добавить члены класса ({0})...</value>
+  </data>
+  <data name="SaveModule_PreserveOtherMetadataStreams" xml:space="preserve">
+    <value>Copy Unkno_wn Metadata Streams</value>
   </data>
 </root>

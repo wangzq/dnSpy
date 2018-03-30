@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -42,9 +42,7 @@ namespace dnSpy.Hex.Intellisense {
 		bool hasInteractiveContent;
 		bool IsStarted { get; set; }
 
-		public override HexBufferSpanSelection ApplicableToSpan {
-			get { return applicableToSpan; }
-		}
+		public override HexBufferSpanSelection ApplicableToSpan => applicableToSpan;
 
 		void SetApplicableToSpan(HexBufferSpanSelection newValue) {
 			if (!applicableToSpan.Equals(newValue)) {
@@ -59,7 +57,7 @@ namespace dnSpy.Hex.Intellisense {
 		HexQuickInfoSource[] quickInfoSources;
 		HexIntellisensePresenter quickInfoPresenter;
 
-		public HexQuickInfoSessionImpl(HexView hexView, HexCellPosition triggerPoint, bool trackMouse, HexIntellisensePresenterFactoryService intellisensePresenterFactoryService, Lazy<HexQuickInfoSourceProvider, VSUTIL.IOrderable>[] quickInfoSourceProviders) {
+		public HexQuickInfoSessionImpl(HexView hexView, in HexCellPosition triggerPoint, bool trackMouse, HexIntellisensePresenterFactoryService intellisensePresenterFactoryService, Lazy<HexQuickInfoSourceProvider, VSUTIL.IOrderable>[] quickInfoSourceProviders) {
 			if (triggerPoint.IsDefault)
 				throw new ArgumentException();
 			QuickInfoContent = new VSLI.BulkObservableCollection<object>();

@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -26,7 +26,7 @@ namespace dnSpy.Debugger.DotNet.Evaluation.Engine.Interpreter {
 		public abstract IEnumerable<DotNetClassHookInfo> Create(IDebuggerRuntime runtime);
 	}
 
-	struct DotNetClassHookInfo {
+	readonly struct DotNetClassHookInfo {
 		public DotNetClassHook Hook { get; }
 		public DmdTypeName? TypeName { get; }
 		public DmdWellKnownType? WellKnownType { get; }
@@ -37,7 +37,7 @@ namespace dnSpy.Debugger.DotNet.Evaluation.Engine.Interpreter {
 			WellKnownType = null;
 		}
 
-		public DotNetClassHookInfo(DotNetClassHook hook, DmdTypeName typeName) {
+		public DotNetClassHookInfo(DotNetClassHook hook, in DmdTypeName typeName) {
 			Hook = hook ?? throw new ArgumentNullException(nameof(hook));
 			TypeName = typeName;
 			WellKnownType = null;

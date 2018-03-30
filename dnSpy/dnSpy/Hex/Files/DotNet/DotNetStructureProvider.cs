@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -60,7 +60,7 @@ namespace dnSpy.Hex.Files.DotNet {
 				if (cor20 == null)
 					return false;
 
-				var mdSpan = Read(peHeaders, cor20.MetaData.Data);
+				var mdSpan = Read(peHeaders, cor20.Metadata.Data);
 				resourcesSpan = Read(peHeaders, cor20.Resources.Data);
 				var snSpan = Read(peHeaders, cor20.StrongNameSignature.Data);
 

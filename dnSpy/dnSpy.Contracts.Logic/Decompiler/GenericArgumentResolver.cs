@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using dnlib.DotNet;
-using dnlib.Threading;
 
 namespace dnSpy.Contracts.Decompiler {
 	/// <summary>
@@ -209,14 +209,14 @@ namespace dnSpy.Contracts.Decompiler {
 			outSig.GenParamCount = inSig.GenParamCount;
 			UpdateSigList(outSig.Params, inSig.Params);
 			if (inSig.ParamsAfterSentinel != null) {
-				outSig.ParamsAfterSentinel = ThreadSafeListCreator.Create<TypeSig>(inSig.ParamsAfterSentinel.Count);
+				outSig.ParamsAfterSentinel = new List<TypeSig>(inSig.ParamsAfterSentinel.Count);
 				UpdateSigList(outSig.ParamsAfterSentinel, inSig.ParamsAfterSentinel);
 			}
 			return outSig;
 		}
 
 		void UpdateSigList(IList<TypeSig> inList, IList<TypeSig> outList) {
-			foreach (var arg in outList.GetSafeEnumerable())
+			foreach (var arg in outList)
 				inList.Add(ResolveGenericArgs(arg));
 		}
 
@@ -232,6 +232,26 @@ namespace dnSpy.Contracts.Decompiler {
 			var gsig = new GenericInstMethodSig();
 			UpdateSigList(gsig.GenericArguments, sig.GenericArguments);
 			return gsig;
+		}
+	}
+
+	struct RecursionCounter {
+		const int MAX_RECURSION_COUNT = 100;
+		int counter;
+
+		public bool Increment() {
+			if (counter >= MAX_RECURSION_COUNT)
+				return false;
+			counter++;
+			return true;
+		}
+
+		public void Decrement() {
+#if DEBUG
+			if (counter <= 0)
+				throw new InvalidOperationException("recursionCounter <= 0");
+#endif
+			counter--;
 		}
 	}
 }

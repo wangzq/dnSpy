@@ -1,5 +1,5 @@
 ﻿/*
-    Copyright (C) 2014-2017 de4dot@gmail.com
+    Copyright (C) 2014-2018 de4dot@gmail.com
 
     This file is part of dnSpy
 
@@ -2051,7 +2051,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			return (int)hash;
 		}
 
-		public override string ToString() => string.Format("{0} - {1}", recursionCounter, options);
+		public override string ToString() => $"{recursionCounter} - {options}";
 	}
 
 	// From dnlib.DotNet.dnlib_Utils

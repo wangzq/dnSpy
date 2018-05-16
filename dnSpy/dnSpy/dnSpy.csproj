@@ -190,7 +190,6 @@
     <Compile Include="Documents\Tabs\AsyncShowResult.cs" />
     <Compile Include="Documents\Tabs\Commands.cs" />
     <Compile Include="Documents\Tabs\CopyTokenCommand.cs" />
-    <Compile Include="CopyLink\CopyLinkCommand.cs" />
     <Compile Include="Documents\Tabs\DecompilationCache.cs" />
     <Compile Include="Documents\Tabs\DefaultDecompileNode.cs" />
     <Compile Include="Documents\Tabs\DefaultDocumentList.cs" />
@@ -1204,6 +1203,7 @@
     <EmbeddedResource Include="Properties\dnSpy.Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>dnSpy.Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\dnSpy.Resources.ru.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Resources.zh-CN.resx" />

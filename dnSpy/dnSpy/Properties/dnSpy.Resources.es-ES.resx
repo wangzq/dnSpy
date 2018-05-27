@@ -169,7 +169,7 @@
     <value>No se puede convertir la entrada para el tipo deseado: {0}</value>
   </data>
   <data name="CloseAllTabGroupsButThisCommand" xml:space="preserve">
-    <value>Cerca de todos los grupos de pestaña menos este</value>
+    <value>Cerrar todos los grupos de pestaña menos este</value>
   </data>
   <data name="CloseAllTabsButThisCommand" xml:space="preserve">
     <value>Cierre _Todas Menos Esta</value>
@@ -205,7 +205,7 @@
     <value>Cancelar</value>
   </data>
   <data name="Decompiling" xml:space="preserve">
-    <value>Decompilando...</value>
+    <value>Descompilando...</value>
   </data>
   <data name="DerivedTypes" xml:space="preserve">
     <value>Tipos Derivados</value>
@@ -559,7 +559,7 @@
     <value>Se ha producido un error desconocido</value>
   </data>
   <data name="UseHorizontalTabGroupsCommand" xml:space="preserve">
-    <value>Use grupos de pestaña Horizontal</value>
+    <value>Use grupos de pestaña Horizontales</value>
   </data>
   <data name="UseVerticalTabGroupsCommand" xml:space="preserve">
     <value>Uso de grupos de la pestaña Vertical</value>
@@ -1113,7 +1113,7 @@
     <value>Integrar con explorador de Windows</value>
   </data>
   <data name="AssemblyExplorerSettings_Order" xml:space="preserve">
-    <value>Aviso (necesitada reiniciar)</value>
+    <value>Aviso (necesita reiniciar)</value>
   </data>
   <data name="AssemblyExplorerSettings_SingleClickExpandNodes" xml:space="preserve">
     <value>Con un solo clic expande los nodos</value>

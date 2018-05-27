@@ -16,6 +16,14 @@
     <Prefer32Bit>false</Prefer32Bit>
     <Features>strict</Features>
     <LangVersion>latest</LangVersion>
+    <!-- TODO:
+      We have to explicitly disable this because it will be enabled by default when we
+      target .NET Framework 4.7.2 or later.
+      We can't enable it because we'll get two different *.config files for dnSpy.exe
+      and dnSpy-x86.exe. Eg. dnSpy-x86.exe gets System.IO.Compression=4.1.1.0 and
+      dnSpy.exe gets System.IO.Compression=4.1.2.0
+    -->
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -1211,6 +1219,8 @@
     <EmbeddedResource Include="Properties\dnSpy.Resources.de.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Resources.es-ES.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Resources.hu.resx" />
+    <EmbeddedResource Include="Properties\dnSpy.Resources.fr.resx" />
+    <EmbeddedResource Include="Properties\dnSpy.Resources.it.resx" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libraries\dnlib\src\dnlib.csproj">
@@ -1391,7 +1401,7 @@
   <!-- TODO: We don't need the arm binary. Once we switch from project.json to PackageReference, we probably won't need this hack -->
   <Target Name="DnSpyRemoveArmBinaries" DependsOnTargets="ResolveNuGetPackageAssets" AfterTargets="ResolveNuGetPackageAssets">
     <ItemGroup>
-      <ReferenceCopyLocalPaths Remove="$(NuGetPackageRoot)**\Microsoft.DiaSymReader.Native.arm.dll" />
+      <ReferenceCopyLocalPaths Remove="$(NuGetPackageRoot)microsoft.diasymreader.native\**\Microsoft.DiaSymReader.Native.arm*.dll" />
     </ItemGroup>
   </Target>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

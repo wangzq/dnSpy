@@ -130,8 +130,8 @@ namespace dnSpy.AsmEditor.Compiler {
 		const SigComparerOptions SIG_COMPARER_OPTIONS = SigComparerOptions.TypeRefCanReferenceGlobalType | SigComparerOptions.PrivateScopeIsComparable;
 
 		public ModuleImporter(ModuleDef targetModule, IAssemblyResolver assemblyResolver) {
-			this.targetModule = targetModule;
-			this.assemblyResolver = assemblyResolver;
+			this.targetModule = targetModule ?? throw new ArgumentNullException(nameof(targetModule));
+			this.assemblyResolver = assemblyResolver ?? throw new ArgumentNullException(nameof(assemblyResolver));
 			diagnostics = new List<CompilerDiagnostic>();
 			newNonNestedImportedTypes = new List<NewImportedType>();
 			nonNestedMergedImportedTypes = new List<MergedImportedType>();
@@ -159,7 +159,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			throw new ModuleImporterAbortedException();
 		}
 
-		ModuleDefMD LoadModule(byte[] rawGeneratedModule, in DebugFileResult debugFile) {
+		ModuleDefMD LoadModule(byte[] rawGeneratedModule, DebugFileResult debugFile) {
 			var opts = new ModuleCreationOptions();
 			opts.TryToLoadPdbFromDisk = false;
 			opts.Context = new ModuleContext(assemblyResolver, new Resolver(assemblyResolver));
@@ -182,7 +182,14 @@ namespace dnSpy.AsmEditor.Compiler {
 				break;
 			}
 
-			return ModuleDefMD.Load(rawGeneratedModule, opts);
+			var module = ModuleDefMD.Load(rawGeneratedModule, opts);
+			if (module.Assembly == null && targetModule.Assembly is AssemblyDef targetAsm) {
+				var asm = new AssemblyDefUser(targetAsm.Name, targetAsm.Version, targetAsm.PublicKey, targetAsm.Culture);
+				asm.Attributes = targetAsm.Attributes;
+				asm.HashAlgorithm = targetAsm.HashAlgorithm;
+				asm.Modules.Add(module);
+			}
+			return module;
 		}
 
 		static void RemoveDuplicates(List<CustomAttribute> attributes, string fullName) {
@@ -342,7 +349,7 @@ namespace dnSpy.AsmEditor.Compiler {
 		/// <param name="rawGeneratedModule">Raw bytes of compiled assembly</param>
 		/// <param name="debugFile">Debug file</param>
 		/// <param name="options">Options</param>
-		public void Import(byte[] rawGeneratedModule, in DebugFileResult debugFile, ModuleImporterOptions options) {
+		public void Import(byte[] rawGeneratedModule, DebugFileResult debugFile, ModuleImporterOptions options) {
 			SetSourceModule(LoadModule(rawGeneratedModule, debugFile));
 
 			AddGlobalTypeMembers(sourceModule.GlobalType);
@@ -391,7 +398,7 @@ namespace dnSpy.AsmEditor.Compiler {
 		/// <param name="rawGeneratedModule">Raw bytes of compiled assembly</param>
 		/// <param name="debugFile">Debug file</param>
 		/// <param name="targetType">Original type that was edited</param>
-		public void Import(byte[] rawGeneratedModule, in DebugFileResult debugFile, TypeDef targetType) {
+		public void Import(byte[] rawGeneratedModule, DebugFileResult debugFile, TypeDef targetType) {
 			if (targetType.Module != targetModule)
 				throw new InvalidOperationException();
 			if (targetType.DeclaringType != null)
@@ -433,7 +440,7 @@ namespace dnSpy.AsmEditor.Compiler {
 		/// <param name="rawGeneratedModule">Raw bytes of compiled assembly</param>
 		/// <param name="debugFile">Debug file</param>
 		/// <param name="targetType">Original type that was edited</param>
-		public void ImportNewMembers(byte[] rawGeneratedModule, in DebugFileResult debugFile, TypeDef targetType) {
+		public void ImportNewMembers(byte[] rawGeneratedModule, DebugFileResult debugFile, TypeDef targetType) {
 			if (targetType.Module != targetModule)
 				throw new InvalidOperationException();
 			if (targetType.DeclaringType != null)
@@ -634,7 +641,7 @@ namespace dnSpy.AsmEditor.Compiler {
 		/// <param name="rawGeneratedModule">Raw bytes of compiled assembly</param>
 		/// <param name="debugFile">Debug file</param>
 		/// <param name="targetMethod">Original method that was edited</param>
-		public void Import(byte[] rawGeneratedModule, in DebugFileResult debugFile, MethodDef targetMethod) {
+		public void Import(byte[] rawGeneratedModule, DebugFileResult debugFile, MethodDef targetMethod) {
 			if (targetMethod.Module != targetModule)
 				throw new InvalidOperationException();
 			SetSourceModule(LoadModule(rawGeneratedModule, debugFile));

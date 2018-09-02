@@ -68,8 +68,9 @@ namespace dnSpy.Roslyn.Compiler {
 		public abstract string FileExtension { get; }
 		protected abstract string AppearanceCategory { get; }
 
-		protected OutputKind DefaultOutputKind { get; }
+		protected abstract bool SupportsNetModule { get; }
 
+		readonly CompilationKind kind;
 		readonly ICodeEditorProvider codeEditorProvider;
 		readonly List<RoslynCodeDocument> documents;
 		readonly IRoslynDocumentationProviderFactory docFactory;
@@ -80,17 +81,20 @@ namespace dnSpy.Roslyn.Compiler {
 		AdhocWorkspace workspace;
 
 		protected RoslynLanguageCompiler(CompilationKind kind, ICodeEditorProvider codeEditorProvider, IRoslynDocumentationProviderFactory docFactory, IRoslynDocumentChangedService roslynDocumentChangedService, ITextViewUndoManagerProvider textViewUndoManagerProvider) {
+			this.kind = kind;
 			this.codeEditorProvider = codeEditorProvider ?? throw new ArgumentNullException(nameof(codeEditorProvider));
 			this.docFactory = docFactory ?? throw new ArgumentNullException(nameof(docFactory));
 			this.roslynDocumentChangedService = roslynDocumentChangedService ?? throw new ArgumentNullException(nameof(roslynDocumentChangedService));
 			this.textViewUndoManagerProvider = textViewUndoManagerProvider ?? throw new ArgumentNullException(nameof(textViewUndoManagerProvider));
-			DefaultOutputKind = GetDefaultOutputKind(kind);
 			documents = new List<RoslynCodeDocument>();
 			projectId = ProjectId.CreateNewId();
 			loadedDocuments = new HashSet<DocumentId>();
 		}
 
-		static OutputKind GetDefaultOutputKind(CompilationKind kind) {
+		OutputKind GetDefaultOutputKind(CompilationKind kind) {
+			if (!SupportsNetModule)
+				return OutputKind.DynamicallyLinkedLibrary;
+
 			switch (kind) {
 			case CompilationKind.EditAssembly:
 				// We can't use netmodule when editing assembly attributes since the compiler won't add an assembly for obvious reasons
@@ -113,7 +117,8 @@ namespace dnSpy.Roslyn.Compiler {
 			}
 		}
 
-		protected abstract CompilationOptions CreateCompilationOptions(bool allowUnsafe);
+		protected abstract CompilationOptions CreateCompilationOptions(OutputKind outputKind);
+		protected abstract CompilationOptions CreateCompilationOptionsNoAttributes(CompilationOptions compilationOptions);
 
 		public abstract IEnumerable<string> GetRequiredAssemblyReferences(ModuleDef editedModule);
 
@@ -124,8 +129,7 @@ namespace dnSpy.Roslyn.Compiler {
 			workspace.WorkspaceChanged += Workspace_WorkspaceChanged;
 			var refs = projectInfo.AssemblyReferences.Select(a => a.CreateMetadataReference(docFactory)).ToArray();
 
-			var compilationOptions = CreateCompilationOptions(allowUnsafe: true)
-				.WithOptimizationLevel(OptimizationLevel.Release)
+			var compilationOptions = CreateCompilationOptions(GetDefaultOutputKind(kind))
 				.WithPlatform(GetPlatform(projectInfo.Platform))
 				.WithAssemblyIdentityComparer(DesktopAssemblyIdentityComparer.Default);
 			if (projectInfo.PublicKey != null) {
@@ -235,10 +239,13 @@ namespace dnSpy.Roslyn.Compiler {
 			// We allow unsafe code but the compiler tries to add extra attributes to the assembly. Sometimes
 			// the corlib doesn't have the required members and the compiler fails to compile the code.
 			// Let's try again but without unsafe code.
-			var compilation2 = compilation.WithOptions(CreateCompilationOptions(allowUnsafe: false));
-			var result2 = Compile(compilation2, cancellationToken);
-			if (result2.Success)
-				return result2;
+			var noAttrOptions = CreateCompilationOptionsNoAttributes(compilation.Options);
+			if (noAttrOptions != compilation.Options) {
+				var compilation2 = compilation.WithOptions(noAttrOptions);
+				var result2 = Compile(compilation2, cancellationToken);
+				if (result2.Success)
+					return result2;
+			}
 
 			return result;
 		}

@@ -120,6 +120,7 @@
     <Compile Include="Evaluation\Engine\Interpreter\VariablesProvider.cs" />
     <Compile Include="Evaluation\Engine\IntrinsicsAssemblyBuilder.cs" />
     <Compile Include="Evaluation\Engine\LanguageConstants.cs" />
+    <Compile Include="Evaluation\Engine\MetadataFixer.cs" />
     <Compile Include="Evaluation\Engine\MethodDebugScopeUtils.cs" />
     <Compile Include="Evaluation\Engine\ModuleRefFinder.cs" />
     <Compile Include="Evaluation\Engine\ObjectCache.cs" />
@@ -217,6 +218,7 @@
     <EmbeddedResource Include="Properties\dnSpy.Debugger.DotNet.Resources.hu.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Debugger.DotNet.Resources.fr.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Debugger.DotNet.Resources.it.resx" />
+    <EmbeddedResource Include="Properties\dnSpy.Debugger.DotNet.Resources.uk.resx" />
   </ItemGroup>
   <ItemGroup>
     <None Include="DotNet.ex.xml" />

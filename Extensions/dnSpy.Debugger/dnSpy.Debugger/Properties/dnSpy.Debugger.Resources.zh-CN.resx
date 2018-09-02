@@ -1492,9 +1492,9 @@
     <value>启用异步调试</value>
   </data>
   <data name="DbgSettings_StepOverPropertiesAndOperators" xml:space="preserve">
-    <value>跨越属性和运算符</value>
+    <value>逐过程执行属性和运算符</value>
   </data>
   <data name="CopyExpressionCommand" xml:space="preserve">
-    <value>复制 E_xpression</value>
+    <value>复制表达式(_X)</value>
   </data>
 </root>

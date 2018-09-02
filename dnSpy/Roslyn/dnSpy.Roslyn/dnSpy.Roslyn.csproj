@@ -43,13 +43,21 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Compiler\CodeEditorOptionsDefinitions.cs" />
-    <Compile Include="Compiler\CSharpLanguageCompiler.cs" />
+    <Compile Include="Compiler\CSharp\CSharpCompilerSettings.cs" />
+    <Compile Include="Compiler\CSharp\CSharpCompilerSettingsImpl.cs" />
+    <Compile Include="Compiler\CSharp\CSharpCompilerSettingsPage.cs" />
+    <Compile Include="Compiler\CSharp\CSharpCompilerSettingsPageProvider.cs" />
+    <Compile Include="Compiler\CSharp\CSharpLanguageCompiler.cs" />
     <Compile Include="Compiler\DiagnosticExtensions.cs" />
     <Compile Include="Compiler\Extensions.cs" />
     <Compile Include="Compiler\FrameworkDetector.cs" />
     <Compile Include="Compiler\RoslynCodeDocument.cs" />
     <Compile Include="Compiler\RoslynLanguageCompiler.cs" />
-    <Compile Include="Compiler\VisualBasicLanguageCompiler.cs" />
+    <Compile Include="Compiler\VisualBasic\VisualBasicCompilerSettings.cs" />
+    <Compile Include="Compiler\VisualBasic\VisualBasicCompilerSettingsImpl.cs" />
+    <Compile Include="Compiler\VisualBasic\VisualBasicCompilerSettingsPage.cs" />
+    <Compile Include="Compiler\VisualBasic\VisualBasicCompilerSettingsPageProvider.cs" />
+    <Compile Include="Compiler\VisualBasic\VisualBasicLanguageCompiler.cs" />
     <Compile Include="Debugger\AliasConstants.cs" />
     <Compile Include="Debugger\ExpressionCompiler\CSharp\CSharpExpressionCompiler.cs" />
     <Compile Include="Debugger\ExpressionCompiler\CSharp\GeneratedNames.cs" />
@@ -271,9 +279,14 @@
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Resources.hu.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Resources.fr.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Resources.it.resx" />
+    <EmbeddedResource Include="Properties\dnSpy.Roslyn.Resources.uk.resx" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="Intellisense\QuickInfo\InformationQuickInfoContentControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\wpf.styles.templates.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

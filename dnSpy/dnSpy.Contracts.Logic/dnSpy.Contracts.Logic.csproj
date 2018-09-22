@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>dnSpy.Contracts</RootNamespace>
     <AssemblyName>dnSpy.Contracts.Logic</AssemblyName>
-    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\dnSpy.snk</AssemblyOriginatorKeyFile>
@@ -132,6 +132,9 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\System.ValueTuple.4.5.0\lib\net461\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +152,9 @@
     <EmbeddedResource Include="Properties\dnSpy.Contracts.Logic.Resources.it.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Contracts.Logic.Resources.uk.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Contracts.Logic.Resources.fa.resx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

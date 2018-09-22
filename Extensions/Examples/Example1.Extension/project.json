@@ -3,7 +3,7 @@
 		"Microsoft.VisualStudio.Text.UI.Wpf": "15.5.27130"
 	},
 	"frameworks": {
-		"net471": { }
+		"net462": { }
 	},
 	"runtimes": {
 		"win": { }

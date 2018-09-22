@@ -127,7 +127,8 @@ namespace dnSpy.AsmEditor.Compiler {
 			public ExtraImportedTypeData(TypeDef compiledType) => CompiledType = compiledType;
 		}
 
-		const SigComparerOptions SIG_COMPARER_OPTIONS = SigComparerOptions.TypeRefCanReferenceGlobalType | SigComparerOptions.PrivateScopeIsComparable;
+		const SigComparerOptions SIG_COMPARER_BASE_OPTIONS = SigComparerOptions.IgnoreModifiers;
+		const SigComparerOptions SIG_COMPARER_OPTIONS = SIG_COMPARER_BASE_OPTIONS | SigComparerOptions.TypeRefCanReferenceGlobalType | SigComparerOptions.PrivateScopeIsComparable;
 
 		public ModuleImporter(ModuleDef targetModule, IAssemblyResolver assemblyResolver) {
 			this.targetModule = targetModule ?? throw new ArgumentNullException(nameof(targetModule));
@@ -408,6 +409,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			var newType = FindSourceType(targetType);
 			if (newType.DeclaringType != null)
 				throw new ArgumentException("Type must not be nested");
+			RenamePropEventAccessors(newType, targetType);
 
 			if (!newType.IsGlobalModuleType)
 				AddGlobalTypeMembers(sourceModule.GlobalType);
@@ -450,6 +452,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			var newType = FindSourceType(targetType);
 			if (newType.DeclaringType != null)
 				throw new ArgumentException("Type must not be nested");
+			RenamePropEventAccessors(newType, targetType);
 
 			if (!newType.IsGlobalModuleType)
 				AddGlobalTypeMembers(sourceModule.GlobalType);
@@ -650,6 +653,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			var newMethodNonNestedDeclType = newMethod.DeclaringType;
 			while (newMethodNonNestedDeclType.DeclaringType != null)
 				newMethodNonNestedDeclType = newMethodNonNestedDeclType.DeclaringType;
+			RenamePropEventAccessors(newMethod.DeclaringType, targetMethod.DeclaringType);
 
 			AddEditedMethod(newMethod, targetMethod);
 			if (!newMethodNonNestedDeclType.IsGlobalModuleType)
@@ -667,6 +671,76 @@ namespace dnSpy.AsmEditor.Compiler {
 			SetSourceModule(null);
 		}
 
+		// A getter in the original module could have a different name than usual, eg. prop='Prop' but getter = 'random_name'.
+		// The C# compiler will call get_Prop, so rename get_Prop to the original name ('random_name')
+		void RenamePropEventAccessors(TypeDef newType, TypeDef targetType) {
+			for (;;) {
+				if (newType.DeclaringType == null && targetType.DeclaringType == null)
+					break;
+				newType = newType.DeclaringType;
+				targetType = targetType.DeclaringType;
+				if (newType == null || targetType == null)
+					throw new InvalidOperationException();
+			}
+
+			var sigComparer = new ImportSigComparer(importSigComparerOptions, SIG_COMPARER_OPTIONS | SigComparerOptions.CompareDeclaringTypes, targetModule);
+			var propComparer = new ImportPropertyEqualityComparer(sigComparer);
+			var eventComparer = new ImportEventEqualityComparer(sigComparer);
+			var targetProps = new Dictionary<PropertyDef, PropertyDef>(propComparer);
+			var targetEvents = new Dictionary<EventDef, EventDef>(eventComparer);
+			foreach (var t in GetTypes(targetType)) {
+				foreach (var p in t.Properties)
+					targetProps[p] = p;
+				foreach (var e in t.Events)
+					targetEvents[e] = e;
+			}
+			foreach (var t in GetTypes(newType)) {
+				foreach (var p in t.Properties) {
+					if (targetProps.TryGetValue(p, out var origProp)) {
+						Rename(p.GetMethod, origProp.GetMethod);
+						Rename(p.SetMethod, origProp.SetMethod);
+					}
+				}
+				foreach (var e in t.Events) {
+					if (targetEvents.TryGetValue(e, out var origEvent)) {
+						Rename(e.AddMethod, origEvent.AddMethod);
+						Rename(e.InvokeMethod, origEvent.InvokeMethod);
+						Rename(e.RemoveMethod, origEvent.RemoveMethod);
+					}
+				}
+			}
+		}
+
+		static void Rename(MethodDef newMethod, MethodDef targetMethod) {
+			if (newMethod == null || targetMethod == null)
+				return;
+			newMethod.Name = targetMethod.Name;
+		}
+
+		static IEnumerable<TypeDef> GetTypes(TypeDef type) {
+			yield return type;
+			foreach (var t in type.GetTypes())
+				yield return t;
+		}
+
+		static UTF8String GetMethodName(MethodDef method) {
+			foreach (var p in method.DeclaringType.Properties) {
+				if (p.GetMethod == method)
+					return "get_" + p.Name;
+				if (p.SetMethod == method)
+					return "set_" + p.Name;
+			}
+			foreach (var e in method.DeclaringType.Events) {
+				if (e.AddMethod == method)
+					return "add_" + e.Name;
+				if (e.RemoveMethod == method)
+					return "remove_" + e.Name;
+				if (e.InvokeMethod == method)
+					return "raise_" + e.Name;
+			}
+			return method.Name;
+		}
+
 		MethodDef FindSourceMethod(MethodDef targetMethod) {
 			var newType = sourceModule.Find(targetMethod.Module.Import(targetMethod.DeclaringType));
 			if (newType == null)
@@ -675,7 +749,7 @@ namespace dnSpy.AsmEditor.Compiler {
 			// Don't check type scopes or we won't be able to find methods with edited nested types.
 			const SigComparerOptions comparerFlags = SIG_COMPARER_OPTIONS | SigComparerOptions.DontCompareTypeScope;
 
-			var newMethod = newType.FindMethod(targetMethod.Name, targetMethod.MethodSig, comparerFlags, targetMethod.Module);
+			var newMethod = newType.FindMethod(GetMethodName(targetMethod), targetMethod.MethodSig, comparerFlags, targetMethod.Module);
 			if (newMethod != null)
 				return newMethod;
 
@@ -1138,7 +1212,7 @@ namespace dnSpy.AsmEditor.Compiler {
 		}
 
 		void InitializeTypesStep1(IEnumerable<MergedImportedType> importedTypes) {
-			var memberDict = new MemberLookup(new ImportSigComparer(importSigComparerOptions, 0, targetModule));
+			var memberDict = new MemberLookup(new ImportSigComparer(importSigComparerOptions, SIG_COMPARER_BASE_OPTIONS, targetModule));
 			foreach (var importedType in importedTypes) {
 				var compiledType = toExtraData[importedType].CompiledType;
 
@@ -1269,7 +1343,7 @@ namespace dnSpy.AsmEditor.Compiler {
 		}
 
 		void InitializeTypesStep2(IEnumerable<MergedImportedType> importedTypes) {
-			var memberDict = new MemberLookup(new ImportSigComparer(importSigComparerOptions, 0, targetModule));
+			var memberDict = new MemberLookup(new ImportSigComparer(importSigComparerOptions, SIG_COMPARER_BASE_OPTIONS, targetModule));
 			foreach (var importedType in importedTypes) {
 				var compiledType = toExtraData[importedType].CompiledType;
 

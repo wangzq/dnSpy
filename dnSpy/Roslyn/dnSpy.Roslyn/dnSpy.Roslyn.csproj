@@ -14,6 +14,7 @@
     <AssemblyOriginatorKeyFile>..\..\..\dnSpy.snk</AssemblyOriginatorKeyFile>
     <Features>strict</Features>
     <LangVersion>latest</LangVersion>
+    <CodeAnalysisRuleSet>..\..\..\DisableBuggyRoslynAnalyzerThatPreventsCompilingThisProjectRemoveWhenItsNotBuggyAnymore.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -280,6 +281,7 @@
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Resources.fr.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Resources.it.resx" />
     <EmbeddedResource Include="Properties\dnSpy.Roslyn.Resources.uk.resx" />
+    <EmbeddedResource Include="Properties\dnSpy.Roslyn.Resources.fa.resx" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="Intellisense\QuickInfo\InformationQuickInfoContentControl.xaml">

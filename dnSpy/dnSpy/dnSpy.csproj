@@ -69,14 +69,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="CopyLink\CommandLineHelper.cs" />
-    <Compile Include="CopyLink\CustomProtcolHelper.cs" />
-    <Compile Include="CopyLink\LinkParser.cs" />
-    <Compile Include="CopyLink\RegMerger.cs" />
-    <Compile Include="CopyLink\TabContentExtensions.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Update="Bookmarks\ToolWindows\Bookmarks\BookmarksControl.xaml.cs">
       <DependentUpon>BookmarksControl.xaml</DependentUpon>
     </Compile>

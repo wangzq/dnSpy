@@ -4,4 +4,4 @@ msbuild /m /nologo /v:q /clp:ErrorsOnly "$PsScriptRoot\dnspy.sln" /p:Configurati
 # Compress-Archive -Destination "$PsScriptRoot\dnspy.release.zip" -LiteralPath $files -Force
 $zipfile = "$PsScriptRoot\dnspy.release.zip"
 if (Test-Path $zipfile) { Remove-Item $zipfile }
-7z a -tzip '-xr!*.pdb' '-xr!*.xml' -mx9 $zipfile "$PsScriptRoot\dnspy\dnspy\bin\release\*"
+7z a -tzip '-xr!*.pdb' '-xr!*.xml' -mx9 $zipfile "$PsScriptRoot\dnspy\dnspy\bin\release\net471\*"

@@ -69,14 +69,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Bookmarks\ToolWindows\Bookmarks\BookmarksControl.xaml.cs">
-      <DependentUpon>BookmarksControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Update="Documents\Tabs\Dialogs\ExportToProjectDlg.xaml.cs">
     <Compile Include="CopyLink\CommandLineHelper.cs" />
     <Compile Include="CopyLink\CustomProtcolHelper.cs" />
     <Compile Include="CopyLink\LinkParser.cs" />
     <Compile Include="CopyLink\RegMerger.cs" />
+    <Compile Include="CopyLink\TabContentExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Bookmarks\ToolWindows\Bookmarks\BookmarksControl.xaml.cs">
+      <DependentUpon>BookmarksControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Update="Documents\Tabs\Dialogs\ExportToProjectDlg.xaml.cs">
       <DependentUpon>ExportToProjectDlg.xaml</DependentUpon>
     </Compile>
     <Compile Update="Documents\Tabs\Dialogs\OpenDocumentListDlg.xaml.cs">
@@ -143,10 +147,8 @@
       <DependentUpon>AppSettingsDlg.xaml</DependentUpon>
     </Compile>
     <Compile Update="Text\Editor\Search\SearchControl.xaml.cs">
-    <Compile Include="CopyLink\TabContentExtensions.cs" />
       <DependentUpon>SearchControl.xaml</DependentUpon>
     </Compile>
-      <SubType>Designer</SubType>
   </ItemGroup>
 
   <ItemGroup>

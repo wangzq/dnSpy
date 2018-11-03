@@ -18,7 +18,10 @@
 */
 
 using System;
+using dnSpy.Contracts.Debugger.CallStack;
+using dnSpy.Contracts.Debugger.DotNet.Disassembly;
 using dnSpy.Contracts.Debugger.Evaluation;
+using dnSpy.Contracts.Disassembly;
 using dnSpy.Contracts.Metadata;
 using dnSpy.Debugger.DotNet.Metadata;
 
@@ -310,6 +313,30 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		/// <param name="b">Value #2</param>
 		/// <returns></returns>
 		bool? Equals(DbgDotNetValue a, DbgDotNetValue b);
+
+		/// <summary>
+		/// Tries to get the native code
+		/// </summary>
+		/// <param name="frame">Frame</param>
+		/// <param name="nativeCode">Updated with the native code if successful</param>
+		/// <returns></returns>
+		bool TryGetNativeCode(DbgStackFrame frame, out DbgDotNetNativeCode nativeCode);
+
+		/// <summary>
+		/// Tries to get the native code
+		/// </summary>
+		/// <param name="method">Method</param>
+		/// <param name="nativeCode">Updated with the native code if successful</param>
+		/// <returns></returns>
+		bool TryGetNativeCode(DmdMethodBase method, out DbgDotNetNativeCode nativeCode);
+
+		/// <summary>
+		/// Tries to get a symbol
+		/// </summary>
+		/// <param name="address">Address</param>
+		/// <param name="result">Updated with the symbol if successful</param>
+		/// <returns></returns>
+		bool TryGetSymbol(ulong address, out SymbolResolverResult result);
 	}
 
 	/// <summary>
@@ -358,6 +385,11 @@ namespace dnSpy.Contracts.Debugger.DotNet.Evaluation {
 		/// Async step with object ids isn't supported
 		/// </summary>
 		NoAsyncStepObjectId		= 0x00000008,
+
+		/// <summary>
+		/// It's possible to get the native code of jitted managed methods
+		/// </summary>
+		NativeMethodBodies		= 0x00000010,
 	}
 
 	/// <summary>

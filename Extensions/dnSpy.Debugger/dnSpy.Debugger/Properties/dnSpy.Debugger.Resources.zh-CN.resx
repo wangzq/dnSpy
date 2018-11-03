@@ -357,9 +357,6 @@
   <data name="FreezeThreadCommand" xml:space="preserve">
     <value>冻结(_F)</value>
   </data>
-  <data name="GoToDisassemblyCommand" xml:space="preserve">
-    <value>转到反汇编</value>
-  </data>
   <data name="GoToDisassemblyCommand2" xml:space="preserve">
     <value>转到反汇编(_D)</value>
   </data>
@@ -1496,5 +1493,14 @@
   </data>
   <data name="CopyExpressionCommand" xml:space="preserve">
     <value>复制表达式(_X)</value>
+  </data>
+  <data name="Error_CouldNotShowDisassembly" xml:space="preserve">
+    <value>找不到方法的代码。请确保进程已暂停，并且该方法已实时编译（JIT）。</value>
+  </data>
+  <data name="DisassemblyCommand" xml:space="preserve">
+    <value>反汇编(_D)</value>
+  </data>
+  <data name="ShortCutKeyAlt8" xml:space="preserve">
+    <value>Alt+8</value>
   </data>
 </root>

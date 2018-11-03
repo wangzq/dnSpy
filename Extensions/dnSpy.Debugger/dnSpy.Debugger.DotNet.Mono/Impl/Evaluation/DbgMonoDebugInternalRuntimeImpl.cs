@@ -24,10 +24,13 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using dnSpy.Contracts.Debugger;
+using dnSpy.Contracts.Debugger.CallStack;
+using dnSpy.Contracts.Debugger.DotNet.Disassembly;
 using dnSpy.Contracts.Debugger.DotNet.Evaluation;
 using dnSpy.Contracts.Debugger.DotNet.Mono;
 using dnSpy.Contracts.Debugger.Engine.Evaluation;
 using dnSpy.Contracts.Debugger.Evaluation;
+using dnSpy.Contracts.Disassembly;
 using dnSpy.Contracts.Metadata;
 using dnSpy.Debugger.DotNet.Metadata;
 using dnSpy.Debugger.DotNet.Mono.CallStack;
@@ -155,20 +158,24 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl.Evaluation {
 				if (ILDbgEngineStackFrame.TryGetEngineStackFrame(evalInfo.Frame, out var ilFrame)) {
 					ilFrame.GetFrameMethodInfo(out var module, out var methodMetadataToken, out var genericTypeArguments, out var genericMethodArguments);
 					// Don't throw if it fails to resolve. Callers must be able to handle null return values
-					var method = module?.ResolveMethod(methodMetadataToken, (IList<DmdType>)null, null, DmdResolveOptions.None);
-					if ((object)method != null) {
-						if (genericTypeArguments.Count != 0) {
-							var type = method.ReflectedType.MakeGenericType(genericTypeArguments);
-							method = type.GetMethod(method.Module, method.MetadataToken, throwOnError: true);
-						}
-						if (genericMethodArguments.Count != 0)
-							method = ((DmdMethodInfo)method).MakeGenericMethod(genericMethodArguments);
-					}
-					state.Method = method;
+					state.Method = TryGetMethod(module, methodMetadataToken, genericTypeArguments, genericMethodArguments);
 				}
 				state.Initialized = true;
 			}
 			return state.Method;
+		}
+
+		static DmdMethodBase TryGetMethod(DmdModule module, int methodMetadataToken, IList<DmdType> genericTypeArguments, IList<DmdType> genericMethodArguments) {
+			var method = module?.ResolveMethod(methodMetadataToken, (IList<DmdType>)null, null, DmdResolveOptions.None);
+			if ((object)method != null) {
+				if (genericTypeArguments.Count != 0) {
+					var type = method.ReflectedType.MakeGenericType(genericTypeArguments);
+					method = type.GetMethod(method.Module, method.MetadataToken, throwOnError: true);
+				}
+				if (genericMethodArguments.Count != 0)
+					method = ((DmdMethodInfo)method).MakeGenericMethod(genericMethodArguments);
+			}
+			return method;
 		}
 
 		TypeMirror GetType(DbgEvaluationInfo evalInfo, DmdType type) =>
@@ -1174,6 +1181,21 @@ namespace dnSpy.Debugger.DotNet.Mono.Impl.Evaluation {
 		bool? EqualsCore(DbgDotNetValueImpl a, DbgDotNetValueImpl b) {
 			Dispatcher.VerifyAccess();
 			return GetEquatableValue(a.Value as ObjectMirror).Equals3(GetEquatableValue(b.Value as ObjectMirror));
+		}
+
+		public bool TryGetNativeCode(DbgStackFrame frame, out DbgDotNetNativeCode nativeCode) {
+			nativeCode = default;
+			return false;
+		}
+
+		public bool TryGetNativeCode(DmdMethodBase method, out DbgDotNetNativeCode nativeCode) {
+			nativeCode = default;
+			return false;
+		}
+
+		public bool TryGetSymbol(ulong address, out SymbolResolverResult result) {
+			result = default;
+			return false;
 		}
 
 		protected override void CloseCore(DbgDispatcher dispatcher) { }

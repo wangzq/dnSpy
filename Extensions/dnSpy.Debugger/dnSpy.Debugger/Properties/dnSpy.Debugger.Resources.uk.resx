@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AddBreakpointCommand" xml:space="preserve">
-    <value>Додати точку зупинки</value>
+    <value>_Додати точку зупинки</value>
   </data>
   <data name="AddExceptionCommand" xml:space="preserve">
     <value>Додати Виключення</value>
@@ -127,7 +127,7 @@
     <value>&lt;не доступне&gt;</value>
   </data>
   <data name="AppMenu_Debug" xml:space="preserve">
-    <value>Відлагодження</value>
+    <value>_Відлагодження</value>
   </data>
   <data name="AppTitle_Debugging" xml:space="preserve">
     <value>Відлагодження</value>
@@ -154,7 +154,7 @@
     <value>Точки зупинок</value>
   </data>
   <data name="Button_Attach" xml:space="preserve">
-    <value>Приєднатись</value>
+    <value>_Приєднатись</value>
   </data>
   <data name="Button_Cancel" xml:space="preserve">
     <value>Відміна</value>
@@ -355,9 +355,6 @@
   </data>
   <data name="FreezeThreadCommand" xml:space="preserve">
     <value>Заморозити</value>
-  </data>
-  <data name="GoToDisassemblyCommand" xml:space="preserve">
-    <value>До дизасембльованого коду</value>
   </data>
   <data name="GoToDisassemblyCommand2" xml:space="preserve">
     <value>До _дизасембльованого коду</value>
@@ -1495,5 +1492,14 @@
   </data>
   <data name="CopyExpressionCommand" xml:space="preserve">
     <value>Копіювати в_иключення</value>
+  </data>
+  <data name="Error_CouldNotShowDisassembly" xml:space="preserve">
+    <value>Не вдалося знайти код методу. Переконайтеся, що процес зупинився і що метод був jitted.</value>
+  </data>
+  <data name="DisassemblyCommand" xml:space="preserve">
+    <value>_Disassembly</value>
+  </data>
+  <data name="ShortCutKeyAlt8" xml:space="preserve">
+    <value>Alt+8</value>
   </data>
 </root>

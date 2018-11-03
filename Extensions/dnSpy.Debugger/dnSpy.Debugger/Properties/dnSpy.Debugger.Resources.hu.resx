@@ -357,9 +357,6 @@ HIBA: {1}</value>
   <data name="FreezeThreadCommand" xml:space="preserve">
     <value>_Freeze</value>
   </data>
-  <data name="GoToDisassemblyCommand" xml:space="preserve">
-    <value>Ugrás a visszafejtéshez</value>
-  </data>
   <data name="GoToDisassemblyCommand2" xml:space="preserve">
     <value>Ugrás a visszafejtéshez</value>
   </data>
@@ -1496,5 +1493,14 @@ Biztosan ki akarja nyitni?</value>
   </data>
   <data name="CopyExpressionCommand" xml:space="preserve">
     <value>_Kifejezés másolása</value>
+  </data>
+  <data name="Error_CouldNotShowDisassembly" xml:space="preserve">
+    <value>A metódus kódja nem található. Győződjön meg róla, hogy a folyamat szünetel és a metódus le lett fordítva.</value>
+  </data>
+  <data name="DisassemblyCommand" xml:space="preserve">
+    <value>_Disassembly</value>
+  </data>
+  <data name="ShortCutKeyAlt8" xml:space="preserve">
+    <value>Alt+8</value>
   </data>
 </root>

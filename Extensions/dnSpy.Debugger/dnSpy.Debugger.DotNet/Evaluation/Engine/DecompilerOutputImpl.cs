@@ -105,10 +105,6 @@ namespace dnSpy.Debugger.DotNet.Evaluation.Engine {
 		public void Write(string text, int index, int length, object reference, DecompilerReferenceFlags flags, object color) {
 			if (addIndent)
 				AddIndent();
-			if (reference == null) {
-				AddText(text, index, length, color);
-				return;
-			}
 			AddText(text, index, length, color);
 		}
 	}

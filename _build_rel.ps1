@@ -1,7 +1,13 @@
 nuget restore "$PsScriptRoot\dnspy.sln"
 msbuild /m /nologo /v:q /clp:ErrorsOnly "$PsScriptRoot\dnspy.sln" /p:Configuration=Release
-# $files = dir "$PsScriptRoot\dnspy\dnspy\bin\release" -Recurse | ? { $_.Name -notmatch '\.(pdb|xml)$' } | Select -Expand FullName
-# Compress-Archive -Destination "$PsScriptRoot\dnspy.release.zip" -LiteralPath $files -Force
 $zipfile = "$PsScriptRoot\dnspy.release.zip"
 if (Test-Path $zipfile) { Remove-Item $zipfile }
-7z a -tzip '-xr!*.pdb' '-xr!*.xml' -mx9 $zipfile "$PsScriptRoot\dnspy\dnspy\bin\release\net471\*"
+$dir = "$PsScriptRoot\dnspy\dnspy\bin\release\net471"
+# delete all xml documentation files; not using '-xr!*.xml' because there are other xml files such as debug\DotNet.Ex.xml we still need
+dir $dir -file *.dll | % {
+	$xml = [IO.Path]::ChangeExtension($_.FullName, '.xml')
+	if (Test-Path $xml) {
+		Remove-Item $xml
+	}
+}
+7z a -tzip '-xr!*.pdb' -mx9 $zipfile "$dir\*"

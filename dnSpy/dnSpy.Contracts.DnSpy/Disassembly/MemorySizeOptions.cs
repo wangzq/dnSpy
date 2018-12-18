@@ -17,29 +17,18 @@
     along with dnSpy.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-namespace dnSpy.Contracts.Disassembly {
-	/// <summary>
-	/// Memory size options used by the formatters
-	/// </summary>
-	public enum MemorySizeOptions {
-		/// <summary>
-		/// Show memory size if the assembler requires it, else don't show any
-		/// </summary>
-		Default,
+using System.Reflection;
 
-		/// <summary>
-		/// Always show the memory size, even if the assembler doesn't need it
-		/// </summary>
-		Always,
+#pragma warning disable 0436
+[assembly: AssemblyVersion(DnSpyAssemblyConstants.ASSEMBLY_VERSION)]
+[assembly: AssemblyFileVersion(DnSpyAssemblyConstants.ASSEMBLY_FILE_VERSION)]
+[assembly: AssemblyInformationalVersion(DnSpyAssemblyConstants.ASSEMBLY_INFORMATIONAL_VERSION)]
 
-		/// <summary>
-		/// Show memory size if a human can't figure out the size of the operand
-		/// </summary>
-		Minimum,
-
-		/// <summary>
-		/// Never show memory size
-		/// </summary>
-		Never,
-	}
+static class DnSpyAssemblyConstants {
+	// Update App.config whenever this value changes.
+	public const string ASSEMBLY_VERSION							= "5.0.12.0";
+	// This is shown in the title bar
+	public const string ASSEMBLY_INFORMATIONAL_VERSION				= "v5.0.12";
+	public const string ASSEMBLY_FILE_VERSION						= ASSEMBLY_VERSION;
 }
+#pragma warning restore 0436
